@@ -1,0 +1,11 @@
+[package]
+name = "host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+methods = { path = "../methods" }
+risc0-zkvm = { version = "0.18.0" }
+lib = { path = "../lib" }
+serde = "1.0"
+bonsai-sdk = "0.4.0"
