@@ -30,10 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let receipt = from_slice::<Receipt, _>(&transcript.journal)?;
 
     let bytes = metadata.output.as_bytes();
-    println!("Journal digest: {:x?}", bytes);
-    println!("Manual reciept digest: {:x?}", sha256(&transcript.journal));
-
-    println!("Receipt: {:#?}", receipt);
+    println!("Receipt: {}", receipt);
     println!("Time used to prove: {:.2}s", now.elapsed().as_secs_f64());
 
     transcript.verify(ZTF_ID)?;

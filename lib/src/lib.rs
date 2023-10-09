@@ -1,15 +1,16 @@
 use std::error::Error;
 
+use db::{BlockConfig, CachedBlockDB};
 use ethers_core::types::{H160, H256};
 use once_cell::sync::Lazy;
 use revm::{
-    db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Address, Bytes, TransactTo, KECCAK_EMPTY, U256},
+    primitives::{AccountInfo, Address, Bytes, HashMap, TransactTo, U256},
     EVM,
 };
 use sha2::{Digest, Sha256};
-use types::{Receipt, Secret, TxSim};
+use types::{Account, Environment, Receipt, Secret, Transaction, TxSim};
 
+pub mod db;
 pub mod types;
 
 static ONE_ETHER: Lazy<U256> = Lazy::new(|| U256::from(1_000_000_000_000_000_000u128));
@@ -23,46 +24,86 @@ static ADDRESS: Lazy<Address> = Lazy::new(|| {
 pub fn secret() -> Result<Secret, Box<dyn Error>> {
     let secret = Secret {
         submitter: H160::from_slice(&ADDRESS.to_vec()),
-        txs: vec![TxSim {
-            caller: *ADDRESS,
-            transact_to: TransactTo::Call(Address::ZERO),
-            value: U256::from(1) * *ONE_ETHER,
-            data: Bytes::new(),
-            nonce: 0,
-        }],
+        txs: vec![
+            TxSim::AdvanceBlock,
+            TxSim::Transaction(Transaction {
+                caller: *ADDRESS,
+                transact_to: TransactTo::Call(Address::ZERO),
+                value: U256::from(1) * *ONE_ETHER,
+                data: Bytes::new(),
+                nonce: 0,
+            }),
+        ],
+        enviroment: Environment {
+            accounts: HashMap::from_iter([(
+                *ADDRESS,
+                Account::new(U256::from(2) * *ONE_ETHER, None),
+            )]),
+            storage: HashMap::new(),
+            block_config: BlockConfig {
+                block_time_sec: 15,
+                start_timestamp: 0,
+                start_block: 0,
+            },
+        },
     };
 
     Ok(secret)
 }
 
 pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
-    let mut cache_db = CacheDB::new(EmptyDB::new());
-    cache_db.insert_account_info(
-        *ADDRESS,
-        AccountInfo {
-            balance: U256::from(2) * *ONE_ETHER,
-            nonce: 0,
-            code_hash: KECCAK_EMPTY,
-            code: None,
-        },
-    );
+    let mut db = CachedBlockDB::new(secret.enviroment.block_config);
+    let enviroment_hash = secret.enviroment.hash();
+    secret
+        .enviroment
+        .accounts
+        .into_iter()
+        .for_each(|(address, account)| {
+            db.db.insert_account_info(
+                address,
+                AccountInfo {
+                    balance: account.balance,
+                    nonce: 0,
+                    code_hash: account.code_hash,
+                    code: account.code,
+                },
+            );
+        });
+    secret
+        .enviroment
+        .storage
+        .into_iter()
+        .for_each(|(address, storage)| {
+            storage.into_iter().for_each(|(key, value)| {
+                db.db.insert_account_storage(address, key, value).ok();
+            });
+        });
 
     let mut evm = EVM::new();
-    evm.database(cache_db);
+    evm.database(db);
 
     let mut hasher = Sha256::new();
-    for tx in secret.txs {
-        assert!(tx.caller == *ADDRESS, "Invalid caller");
-        hasher.update(&tx.as_bytes());
-        evm.env.tx = tx.into();
-        let result = evm.transact_commit()?;
-        assert!(result.is_success(), "Transaction failed");
+    for tx_sim in secret.txs {
+        hasher.update(&tx_sim.as_bytes());
+        match tx_sim {
+            TxSim::Transaction(tx) => {
+                assert!(tx.caller == *ADDRESS, "Invalid caller");
+                evm.env.tx = tx.into();
+                evm.env.block = evm.db.as_ref().unwrap().block_env();
+                let result = evm.transact_commit()?;
+                assert!(result.is_success(), "Transaction failed");
+            }
+            TxSim::AdvanceBlock => {
+                evm.db.as_mut().unwrap().advance();
+            }
+        }
     }
-    let hash_output = H256::from_slice(hasher.finalize().as_slice());
+    let txs_hash = H256::from_slice(hasher.finalize().as_slice());
 
     Ok(Receipt {
-        hash: hash_output.to_fixed_bytes(),
         submitter: secret.submitter.to_fixed_bytes(),
+        txs_hash: txs_hash.to_fixed_bytes(),
+        enviroment_hash: enviroment_hash.to_fixed_bytes(),
     })
 }
 
@@ -76,7 +117,7 @@ mod tests {
     fn test_transact() -> Result<(), Box<dyn Error>> {
         let secret = secret().expect("Unable to get secret");
         let receipt = transact(secret).expect("Unable to transact");
-        println!("Receipt: {:?}", receipt);
+        println!("Receipt: {}", receipt);
         println!("Receipt hash: {:?}", receipt.hash());
 
         Ok(())
