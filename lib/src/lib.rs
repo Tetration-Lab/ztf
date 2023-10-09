@@ -61,14 +61,24 @@ pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
     let hash_output = H256::from_slice(hasher.finalize().as_slice());
 
     Ok(Receipt {
-        hash: hash_output,
-        submitter: secret.submitter,
+        hash: hash_output.to_fixed_bytes(),
+        submitter: secret.submitter.to_fixed_bytes(),
     })
 }
 
-#[test]
-fn test_transact() {
-    let secret = secret().expect("Unable to get secret");
-    let receipt = transact(secret).expect("Unable to transact");
-    println!("Receipt: {:?}", receipt);
+#[cfg(test)]
+mod tests {
+    use std::error::Error;
+
+    use crate::{secret, transact};
+
+    #[test]
+    fn test_transact() -> Result<(), Box<dyn Error>> {
+        let secret = secret().expect("Unable to get secret");
+        let receipt = transact(secret).expect("Unable to transact");
+        println!("Receipt: {:?}", receipt);
+        println!("Receipt hash: {:?}", receipt.hash());
+
+        Ok(())
+    }
 }

@@ -1,5 +1,5 @@
-mod reciept;
+mod receipt;
 mod secret;
 
-pub use reciept::*;
+pub use receipt::*;
 pub use secret::*;
