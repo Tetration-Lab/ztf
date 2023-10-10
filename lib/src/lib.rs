@@ -4,7 +4,7 @@ use db::{BlockConfig, CachedBlockDB};
 use ethers_core::types::{H160, H256};
 use once_cell::sync::Lazy;
 use revm::{
-    primitives::{Address, Bytes, HashMap, TransactTo, U256},
+    primitives::{Address, Bytes, HashMap, HashSet, TransactTo, U256},
     EVM,
 };
 use sha2::{Digest, Sha256};
@@ -45,6 +45,7 @@ pub fn secret() -> Result<Secret, Box<dyn Error>> {
                 start_timestamp: 0,
                 start_block: 0,
             },
+            allowed_accounts: HashSet::from_iter([*ADDRESS]),
         },
     };
 
@@ -64,7 +65,12 @@ pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
         hasher.update(&tx_sim.as_bytes());
         match tx_sim {
             TxSim::Transaction(tx) => {
-                assert!(tx.caller == *ADDRESS, "Invalid caller");
+                secret
+                    .enviroment
+                    .allowed_accounts
+                    .contains(&tx.caller)
+                    .then_some(())
+                    .expect("Caller not allowed");
                 evm.env.tx = tx.into();
                 evm.env.block = evm.db.as_ref().unwrap().block_env();
                 let result = evm.transact_commit()?;
