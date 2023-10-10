@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-import "../ICallback.sol";
+import "../IFlag.sol";
 
-contract TotallySecureContract is ICallback {
+contract TotallySecureContract is IFlag {
     address owner = 0x000000000000000000000000000000000000dEaD;
     bool public pause = false;
     address public ztf;
 
-    constructor(address _ztf) {
-        ztf = _ztf;
-    }
+    constructor() {}
 
     function changeOwner(address newOwner) external {
         require(msg.sender == owner, "Only owner can change owner");
@@ -26,8 +24,9 @@ contract TotallySecureContract is ICallback {
         return owner;
     }
 
-    function callback(address) external {
-        require(msg.sender == ztf, "Only ZTF can call this function");
-        pause = true;
+    function capture() external override {
+        if (this.getOwner() != 0x000000000000000000000000000000000000dEaD) {
+            emit Captured();
+        }
     }
 }
