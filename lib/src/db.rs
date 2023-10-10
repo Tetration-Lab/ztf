@@ -80,7 +80,7 @@ impl CachedBlockDB {
             next_block_number,
             Block {
                 block_number: next_block_number,
-                timestamp: last_block.timestamp + self.block_config.block_time_sec as u64,
+                timestamp: last_block.timestamp + self.block_config.block_time_sec,
                 hash,
             },
         );

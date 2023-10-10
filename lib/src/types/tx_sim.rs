@@ -61,11 +61,11 @@ impl Transaction {
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
-        bytes.extend_from_slice(&self.caller.to_vec());
+        bytes.extend_from_slice(self.caller.as_ref());
         bytes.extend_from_slice(&match &self.transact_to {
             TransactTo::Call(a) => {
                 let mut bytes = vec![0];
-                bytes.extend_from_slice(&a.to_vec());
+                bytes.extend_from_slice(a.as_ref());
                 bytes
             }
             TransactTo::Create(c) => match c {
@@ -85,14 +85,14 @@ impl Transaction {
     }
 }
 
-impl Into<TxEnv> for Transaction {
-    fn into(self) -> TxEnv {
+impl From<Transaction> for TxEnv {
+    fn from(val: Transaction) -> Self {
         TxEnv {
-            caller: self.caller,
-            transact_to: self.transact_to,
-            value: self.value,
-            data: self.data,
-            nonce: Some(self.nonce),
+            caller: val.caller,
+            transact_to: val.transact_to,
+            value: val.value,
+            data: val.data,
+            nonce: Some(val.nonce),
             ..Default::default()
         }
     }
