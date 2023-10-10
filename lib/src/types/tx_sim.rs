@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use revm::primitives::{Address, Bytes, CreateScheme, TransactTo, TxEnv, U256};
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +19,17 @@ impl TxSim {
             }
             TxSim::AdvanceBlock => vec![1],
         }
+    }
+}
+
+impl Display for TxSim {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            serde_json::to_string_pretty(self).expect("Should serialize")
+        )?;
+        Ok(())
     }
 }
 

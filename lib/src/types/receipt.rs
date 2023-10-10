@@ -33,12 +33,6 @@ impl Receipt {
         hasher.update(self.as_bytes());
         H256::from_slice(hasher.finalize().as_slice())
     }
-
-    #[cfg(test)]
-    pub fn as_bytes_risc0(&self) -> Vec<u8> {
-        let receipt_words: Vec<u32> = risc0_zkvm::serde::to_vec(self).expect("Should serialize");
-        bytemuck::cast_slice(&receipt_words).to_vec()
-    }
 }
 
 impl Display for Receipt {
