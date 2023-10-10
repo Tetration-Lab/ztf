@@ -11,10 +11,10 @@ use crate::db::BlockConfig;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Account {
-    #[serde(skip_serializing_if = "Account::is_balance_zero")]
+    #[serde(skip_serializing_if = "Account::is_balance_zero", default)]
     pub balance: U256,
     pub code_hash: FixedBytes<32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub code: Option<Bytecode>,
 }
 
@@ -41,11 +41,11 @@ impl Account {
 pub struct Environment {
     pub block_config: BlockConfig,
     pub target_condition: TargetCondition,
-    #[serde(skip_serializing_if = "HashSet::is_empty")]
+    #[serde(skip_serializing_if = "HashSet::is_empty", default)]
     pub allowed_accounts: HashSet<Address>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub accounts: HashMap<Address, Account>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub storage: HashMap<Address, HashMap<U256, U256>>,
 }
 
@@ -76,9 +76,9 @@ impl Display for Environment {
 pub struct TargetCondition {
     pub contract: Address,
     pub topic: FixedBytes<32>,
-    #[serde(skip_serializing_if = "TargetCondition::is_gas_limit_zero")]
+    #[serde(skip_serializing_if = "TargetCondition::is_gas_limit_zero", default)]
     pub gas_limit_tx: u64,
-    #[serde(skip_serializing_if = "TargetCondition::is_gas_limit_zero")]
+    #[serde(skip_serializing_if = "TargetCondition::is_gas_limit_zero", default)]
     pub gas_limit_accum: u64,
 }
 
