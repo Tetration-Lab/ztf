@@ -7,6 +7,8 @@ use revm::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::types::Environment;
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BlockConfig {
     pub block_time_sec: u64,
@@ -91,6 +93,25 @@ impl CachedBlockDB {
             timestamp: U256::from(self.blocks[&self.block_number].timestamp),
             ..Default::default()
         }
+    }
+
+    pub fn setup_environment(&mut self, env: &Environment) {
+        env.accounts.iter().for_each(|(address, account)| {
+            self.db.insert_account_info(
+                *address,
+                AccountInfo {
+                    balance: account.balance,
+                    nonce: 0,
+                    code_hash: account.code_hash,
+                    code: account.code.clone(),
+                },
+            );
+        });
+        env.storage.iter().for_each(|(address, storage)| {
+            storage.iter().for_each(|(key, value)| {
+                self.db.insert_account_storage(*address, *key, *value).ok();
+            });
+        });
     }
 }
 

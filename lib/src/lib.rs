@@ -4,7 +4,7 @@ use db::{BlockConfig, CachedBlockDB};
 use ethers_core::types::{H160, H256};
 use once_cell::sync::Lazy;
 use revm::{
-    primitives::{AccountInfo, Address, Bytes, HashMap, TransactTo, U256},
+    primitives::{Address, Bytes, HashMap, TransactTo, U256},
     EVM,
 };
 use sha2::{Digest, Sha256};
@@ -53,33 +53,10 @@ pub fn secret() -> Result<Secret, Box<dyn Error>> {
 
 pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
     let mut db = CachedBlockDB::new(secret.enviroment.block_config);
-    let enviroment_hash = secret.enviroment.hash();
-    secret
-        .enviroment
-        .accounts
-        .into_iter()
-        .for_each(|(address, account)| {
-            db.db.insert_account_info(
-                address,
-                AccountInfo {
-                    balance: account.balance,
-                    nonce: 0,
-                    code_hash: account.code_hash,
-                    code: account.code,
-                },
-            );
-        });
-    secret
-        .enviroment
-        .storage
-        .into_iter()
-        .for_each(|(address, storage)| {
-            storage.into_iter().for_each(|(key, value)| {
-                db.db.insert_account_storage(address, key, value).ok();
-            });
-        });
-
     let mut evm = EVM::new();
+
+    let enviroment_hash = secret.enviroment.hash();
+    db.setup_environment(&secret.enviroment);
     evm.database(db);
 
     let mut hasher = Sha256::new();
