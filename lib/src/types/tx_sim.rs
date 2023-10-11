@@ -40,6 +40,8 @@ pub struct Transaction {
     pub value: U256,
     pub data: Bytes,
     pub nonce: u64,
+    pub gas_limit: Option<u64>,
+    pub access_list: Vec<(Address, Vec<U256>)>,
 }
 
 impl Transaction {
@@ -49,6 +51,8 @@ impl Transaction {
         value: U256,
         data: Bytes,
         nonce: u64,
+        gas_limit: Option<u64>,
+        access_list: Vec<(Address, Vec<U256>)>,
     ) -> Self {
         Self {
             caller,
@@ -56,31 +60,49 @@ impl Transaction {
             value,
             data,
             nonce,
+            gas_limit,
+            access_list,
         }
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(self.caller.as_ref());
-        bytes.extend_from_slice(&match &self.transact_to {
+        match &self.transact_to {
             TransactTo::Call(a) => {
-                let mut bytes = vec![0];
+                bytes.push(0);
                 bytes.extend_from_slice(a.as_ref());
-                bytes
             }
             TransactTo::Create(c) => match c {
-                CreateScheme::Create => vec![1, 0],
+                CreateScheme::Create => {
+                    bytes.extend_from_slice(&[1, 0]);
+                }
                 CreateScheme::Create2 { salt } => {
-                    let mut bytes = vec![1, 1];
+                    bytes.extend_from_slice(&[1, 1]);
                     bytes.extend_from_slice(&salt.to_be_bytes::<32>());
-                    bytes
                 }
             },
-        });
+        };
         bytes.extend_from_slice(&self.value.to_be_bytes::<32>());
         bytes.extend_from_slice(&(self.data.len() as u32).to_be_bytes());
         bytes.extend_from_slice(&self.data);
         bytes.extend_from_slice(&self.nonce.to_be_bytes());
+        match self.gas_limit {
+            Some(gl) => {
+                bytes.push(1);
+                bytes.extend_from_slice(&gl.to_be_bytes())
+            }
+            None => bytes.push(0),
+        }
+        bytes.extend_from_slice(&(self.access_list.len() as u32).to_be_bytes());
+        for access in &self.access_list {
+            bytes.extend_from_slice(access.0.as_ref());
+            bytes.extend_from_slice(&(access.1.len() as u32).to_be_bytes());
+            for slot in &access.1 {
+                bytes.extend_from_slice(&slot.to_be_bytes::<32>());
+            }
+        }
+
         bytes
     }
 }
@@ -93,6 +115,8 @@ impl From<Transaction> for TxEnv {
             value: val.value,
             data: val.data,
             nonce: Some(val.nonce),
+            gas_limit: val.gas_limit.unwrap_or(u64::MAX),
+            access_list: val.access_list,
             ..Default::default()
         }
     }

@@ -7,8 +7,10 @@ use sha2::{Digest, Sha256};
 use types::{Receipt, Secret, TxSim};
 
 pub mod db;
-pub mod secrets;
 pub mod types;
+
+#[cfg(feature = "debug-secret")]
+pub mod secrets;
 
 pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
     let mut db = CachedBlockDB::new(secret.enviroment.block_config);

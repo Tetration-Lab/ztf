@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use ethers_core::types::H256;
 use revm::primitives::{
-    hex::FromHex, Address, Bytecode, FixedBytes, HashMap, HashSet, KECCAK_EMPTY, U256,
+    hex::FromHex, Address, Bytecode, FixedBytes, HashMap, HashSet, SpecId, KECCAK_EMPTY, U256,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -33,6 +33,7 @@ impl Account {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Environment {
+    pub spec: SpecId,
     pub block_config: BlockConfig,
     pub target_condition: TargetCondition,
     pub allowed_accounts: HashSet<Address>,
