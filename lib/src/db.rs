@@ -39,7 +39,7 @@ pub struct Block {
     pub hash: B256,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CachedBlockDB {
     pub block_config: BlockConfig,
     pub block_number: u64,

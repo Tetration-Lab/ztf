@@ -33,6 +33,12 @@ impl Display for TxSim {
     }
 }
 
+impl From<Transaction> for TxSim {
+    fn from(val: Transaction) -> Self {
+        TxSim::Transaction(val)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
     pub caller: Address,

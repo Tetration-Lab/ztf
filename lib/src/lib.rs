@@ -37,7 +37,6 @@ pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
                 evm.env.tx = tx.into();
                 evm.env.block = evm.db.as_ref().unwrap().block_env();
                 let result = evm.transact_commit()?;
-                println!("Tx: {:?}", result);
                 assert!(result.is_success(), "Transaction failed");
                 let gas_used = result.gas_used();
                 assert!(

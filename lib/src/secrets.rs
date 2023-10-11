@@ -144,12 +144,6 @@ pub fn merkledrop() -> Result<Secret, Error> {
                 )),
             ),
         )
-        .storage_slot(
-            target_contract,
-            U256::ZERO,
-            U256::from_str("0x5176d84267cd453dad23d8f698d704fc7b7ee6283b5131cb3de77e58eb9c3ec3")
-                .unwrap(),
-        )
         .build();
 
     let abi = parse_abi(&[
