@@ -12,6 +12,9 @@ pub mod types;
 #[cfg(feature = "debug-secret")]
 pub mod secrets;
 
+#[cfg(feature = "utils")]
+pub mod utils;
+
 pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
     let mut db = CachedBlockDB::new(secret.enviroment.block_config);
     let mut evm = EVM::new();
