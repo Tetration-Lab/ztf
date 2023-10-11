@@ -1,35 +1,13 @@
 use std::fmt::Display;
 
 use ethers_core::types::H256;
-use revm::primitives::{
-    hex::FromHex, Address, Bytecode, FixedBytes, HashMap, HashSet, SpecId, KECCAK_EMPTY, U256,
-};
+use revm::primitives::{Address, HashMap, HashSet, SpecId, U256};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::db::BlockConfig;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct Account {
-    pub balance: U256,
-    pub code_hash: FixedBytes<32>,
-    pub code: Option<Bytecode>,
-}
-
-impl Account {
-    pub fn new(balance: U256, code: Option<Bytecode>) -> Self {
-        let code_hash = match &code {
-            Some(code) => code.hash_slow(),
-            None => KECCAK_EMPTY,
-        };
-
-        Self {
-            balance,
-            code_hash,
-            code,
-        }
-    }
-}
+use super::{Account, TargetCondition};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Environment {
@@ -41,7 +19,42 @@ pub struct Environment {
     pub storage: HashMap<Address, HashMap<U256, U256>>,
 }
 
+impl Default for Environment {
+    fn default() -> Self {
+        Self {
+            spec: SpecId::LATEST,
+            block_config: Default::default(),
+            target_condition: Default::default(),
+            allowed_accounts: Default::default(),
+            accounts: Default::default(),
+            storage: Default::default(),
+        }
+    }
+}
+
 impl Environment {
+    pub fn builder() -> EnvironmentBuilder {
+        EnvironmentBuilder::new()
+    }
+
+    pub fn new(
+        spec: SpecId,
+        block_config: BlockConfig,
+        target_condition: TargetCondition,
+        allowed_accounts: HashSet<Address>,
+        accounts: HashMap<Address, Account>,
+        storage: HashMap<Address, HashMap<U256, U256>>,
+    ) -> Self {
+        Self {
+            spec,
+            block_config,
+            target_condition,
+            allowed_accounts,
+            accounts,
+            storage,
+        }
+    }
+
     pub fn as_bytes(&self) -> Vec<u8> {
         serde_json::to_vec(self).expect("Should serialize")
     }
@@ -64,45 +77,64 @@ impl Display for Environment {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct TargetCondition {
-    pub contract: Address,
-    pub topic: FixedBytes<32>,
-    pub gas_limit_tx: u64,
-    pub gas_limit_accum: u64,
-}
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct EnvironmentBuilder(Environment);
 
-impl TargetCondition {
-    pub fn new(contract: Address, topic: FixedBytes<32>) -> Self {
-        Self {
-            contract,
-            topic,
-            gas_limit_tx: 0,
-            gas_limit_accum: 0,
-        }
+impl EnvironmentBuilder {
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn new_captured(contract: Address) -> Self {
-        Self::new(
-            contract,
-            FixedBytes::from_hex(
-                "0x63615589523f572b4bad8ebb05080156cf59cceb5f5c34ed89d054f2427f595f",
-            )
-            .unwrap(),
-        )
+    pub fn build(self) -> Environment {
+        self.0
     }
 
-    pub fn with_gas_limit_tx(self, gas_limit_tx: u64) -> Self {
-        Self {
-            gas_limit_tx,
-            ..self
-        }
+    pub fn spec(mut self, spec: SpecId) -> Self {
+        self.0.spec = spec;
+        self
     }
 
-    pub fn with_gas_limit_accum(self, gas_limit_accum: u64) -> Self {
-        Self {
-            gas_limit_accum,
-            ..self
-        }
+    pub fn block_config(mut self, block_config: BlockConfig) -> Self {
+        self.0.block_config = block_config;
+        self
+    }
+
+    pub fn target_condition(mut self, target_condition: TargetCondition) -> Self {
+        self.0.target_condition = target_condition;
+        self
+    }
+
+    pub fn allowed_accounts(mut self, allowed_accounts: HashSet<Address>) -> Self {
+        self.0.allowed_accounts = allowed_accounts;
+        self
+    }
+
+    pub fn accounts(mut self, accounts: HashMap<Address, Account>) -> Self {
+        self.0.accounts = accounts;
+        self
+    }
+
+    pub fn storage(mut self, storage: HashMap<Address, HashMap<U256, U256>>) -> Self {
+        self.0.storage = storage;
+        self
+    }
+
+    pub fn account(mut self, address: Address, account: Account) -> Self {
+        self.0.accounts.insert(address, account);
+        self
+    }
+
+    pub fn storage_slot(mut self, address: Address, key: U256, value: U256) -> Self {
+        self.0
+            .storage
+            .entry(address)
+            .or_insert_with(HashMap::default)
+            .insert(key, value);
+        self
+    }
+
+    pub fn allowed_account(mut self, address: Address) -> Self {
+        self.0.allowed_accounts.insert(address);
+        self
     }
 }

@@ -44,7 +44,25 @@ pub struct Transaction {
     pub access_list: Vec<(Address, Vec<U256>)>,
 }
 
+impl Default for Transaction {
+    fn default() -> Self {
+        Self {
+            caller: Default::default(),
+            transact_to: TransactTo::Call(Default::default()),
+            value: Default::default(),
+            data: Default::default(),
+            nonce: Default::default(),
+            gas_limit: Default::default(),
+            access_list: Default::default(),
+        }
+    }
+}
+
 impl Transaction {
+    pub fn builder() -> TransactionBuilder {
+        TransactionBuilder::new()
+    }
+
     pub fn new(
         caller: Address,
         transact_to: TransactTo,
@@ -119,5 +137,73 @@ impl From<Transaction> for TxEnv {
             access_list: val.access_list,
             ..Default::default()
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct TransactionBuilder(Transaction);
+
+impl TransactionBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build(self) -> Transaction {
+        self.0
+    }
+
+    pub fn caller(mut self, caller: Address) -> Self {
+        self.0.caller = caller;
+        self
+    }
+
+    pub fn transact_to(mut self, transact_to: TransactTo) -> Self {
+        self.0.transact_to = transact_to;
+        self
+    }
+
+    pub fn to(mut self, to: Address) -> Self {
+        self.0.transact_to = TransactTo::Call(to);
+        self
+    }
+
+    pub fn create(mut self) -> Self {
+        self.0.transact_to = TransactTo::Create(CreateScheme::Create);
+        self
+    }
+
+    pub fn create2(mut self, salt: U256) -> Self {
+        self.0.transact_to = TransactTo::Create(CreateScheme::Create2 { salt });
+        self
+    }
+
+    pub fn value(mut self, value: U256) -> Self {
+        self.0.value = value;
+        self
+    }
+
+    pub fn data(mut self, data: Bytes) -> Self {
+        self.0.data = data;
+        self
+    }
+
+    pub fn nonce(mut self, nonce: u64) -> Self {
+        self.0.nonce = nonce;
+        self
+    }
+
+    pub fn gas_limit(mut self, gas_limit: Option<u64>) -> Self {
+        self.0.gas_limit = gas_limit;
+        self
+    }
+
+    pub fn access_list(mut self, access_list: Vec<(Address, Vec<U256>)>) -> Self {
+        self.0.access_list = access_list;
+        self
+    }
+
+    pub fn access(mut self, address: Address, slots: Vec<U256>) -> Self {
+        self.0.access_list.push((address, slots));
+        self
     }
 }
