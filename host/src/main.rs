@@ -1,6 +1,6 @@
 use std::{error::Error, time::Instant};
 
-use lib::{secrets::totally_not_a_backdoor, types::Receipt};
+use lib::{secrets::merkledrop, types::Receipt};
 use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     default_prover,
@@ -9,7 +9,7 @@ use risc0_zkvm::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let secret = totally_not_a_backdoor()?;
+    let secret = merkledrop()?;
 
     let env = ExecutorEnv::builder()
         .add_input(&to_vec(&secret)?)

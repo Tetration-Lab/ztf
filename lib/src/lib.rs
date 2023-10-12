@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use anyhow::anyhow;
 use db::CachedBlockDB;
 use ethers_core::types::H256;
 use revm::EVM;
@@ -15,6 +16,7 @@ pub mod secrets;
 #[cfg(feature = "utils")]
 pub mod utils;
 
+/// Transact a secret and return the receipt.
 pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
     let mut db = CachedBlockDB::new(secret.enviroment.block_config);
     let mut evm = EVM::new();
@@ -36,17 +38,24 @@ pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
                     .allowed_accounts
                     .contains(&tx.caller)
                     .then_some(())
-                    .expect("Caller not allowed");
+                    .ok_or(anyhow!("Caller not allowed"))?;
                 evm.env.tx = tx.into();
                 evm.env.block = evm.db.as_ref().unwrap().block_env();
                 let result = evm.transact_commit()?;
-                assert!(result.is_success(), "Transaction failed");
+                result
+                    .is_success()
+                    .then_some(())
+                    .ok_or(anyhow!("Transaction failed at index {_i}: {:?}", result))?;
                 let gas_used = result.gas_used();
-                assert!(
-                    secret.enviroment.target_condition.gas_limit_tx == 0
-                        || gas_used <= secret.enviroment.target_condition.gas_limit_tx,
-                    "Gas limit exceeded"
-                );
+                (secret.enviroment.target_condition.gas_limit_tx == 0
+                    || gas_used <= secret.enviroment.target_condition.gas_limit_tx)
+                    .then_some(())
+                    .ok_or(anyhow!(
+                        "Gas limit exceeded, maximum {} found {}",
+                        secret.enviroment.target_condition.gas_limit_tx,
+                        gas_used
+                    ))?;
+
                 gas_used_accum += gas_used;
 
                 for log in result.logs().iter().rev() {
@@ -64,12 +73,18 @@ pub fn transact(secret: Secret) -> Result<Receipt, Box<dyn Error>> {
         }
     }
 
-    assert!(target_met, "Target condition not met");
-    assert!(
-        secret.enviroment.target_condition.gas_limit_accum == 0
-            || gas_used_accum <= secret.enviroment.target_condition.gas_limit_accum,
-        "Gas accum limit exceeded"
-    );
+    target_met
+        .then_some(())
+        .ok_or(anyhow!("Target condition not met"))?;
+
+    (secret.enviroment.target_condition.gas_limit_accum == 0
+        || gas_used_accum <= secret.enviroment.target_condition.gas_limit_accum)
+        .then_some(())
+        .ok_or(anyhow!(
+            "Gas limit exceeded, maximum {} found {}",
+            secret.enviroment.target_condition.gas_limit_accum,
+            gas_used_accum
+        ))?;
 
     let txs_hash = H256::from_slice(hasher.finalize().as_slice());
 
