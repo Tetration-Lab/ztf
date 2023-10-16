@@ -14,17 +14,14 @@ import {
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import LinkNext from "next/link";
-import NAV_ITEMS from "@/constants/Menu";
 import { useRouter } from "next/router";
 import * as React from "react";
+import MENU from "@/constants/menu";
 
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "w3m-button": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
+      "w3m-button": any;
     }
   }
 }
@@ -75,7 +72,7 @@ const Navbar = () => {
             </Text>
             <DesktopNav />
           </HStack>
-          <w3m-button />
+          <w3m-button size="sm" />
         </Flex>
 
         <Collapse in={isOpen} animateOpacity>
@@ -89,7 +86,7 @@ const Navbar = () => {
 const DesktopNav = () => {
   return (
     <Stack direction={"row"} spacing={10}>
-      {NAV_ITEMS.map((navItem, i) => (
+      {MENU.map((navItem, i) => (
         <Link key={i} as={LinkNext} href={navItem.href}>
           {navItem.label}
         </Link>
@@ -101,7 +98,7 @@ const DesktopNav = () => {
 const MobileNav = () => {
   return (
     <Stack p={4} display={{ md: "none" }}>
-      {NAV_ITEMS.map((navItem) => (
+      {MENU.map((navItem) => (
         <MobileNavItem key={navItem.label} {...navItem} />
       ))}
     </Stack>

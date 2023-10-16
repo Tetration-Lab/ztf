@@ -1,8 +1,6 @@
-interface IMenu {
-  label: string;
-  href: string;
-}
-const MENU: IMenu[] = [
+import { Menu } from "@/interfaces/menu";
+
+const MENU: Menu[] = [
   {
     label: "Bounties",
     href: "/",

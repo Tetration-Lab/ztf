@@ -1,4 +1,6 @@
 import { extendTheme } from "@chakra-ui/react";
+import { cardTheme } from "./Card";
+import { buttonTheme } from "./Button";
 
 const breakpoints = {
   sm: "23.5em",
@@ -59,18 +61,25 @@ const theme = extendTheme({
       700: "#8D2109",
       800: "#6B1401",
       900: "#490D00",
+      accent: "#F35836",
     },
-    grayScale: {
-      50: "#EDF2F7",
-      100: "#D6DCE3",
-      200: "#BFC7CE",
-      300: "#A9B2BA",
-      400: "#949DA5",
-      500: "#808891",
-      600: "#6C747D",
-      700: "#586068",
-      800: "#3B3B3B",
-      900: "#343A3F",
+    gray: {
+      25: "#FCFCFD",
+      50: "#f9f9fb",
+      75: "#7875951A",
+      100: "#e6ecf6",
+      200: "#cfd9ed",
+      300: "#a3b0ca",
+      350: "#8aa0cb",
+      400: "#727d96",
+      500: "#2b303f",
+      550: "#21252f",
+      600: "#1b1e27",
+      700: "#11141c",
+      800: "#0c0d16",
+      900: "#05060e",
+      1000: "#344054",
+      bginput: "#2b303f",
     },
     background: {
       primary: "#0B0C0D",
@@ -90,7 +99,12 @@ const theme = extendTheme({
     success: "#46ada7",
     warning: "#f6925a",
   },
-  components: {},
+
+  components: {
+    Card: cardTheme,
+    Button: buttonTheme,
+  },
+
   fonts: {
     heading: "Inconsolata",
     body: "Inconsolata",
@@ -101,7 +115,7 @@ const theme = extendTheme({
   styles: {
     global: (_props: any) => ({
       body: {
-        bg: "background.primary",
+        bg: "#05060E",
         overflowX: "hidden",
         lineHeight: "base",
         backgroundPosition: "0 -10vh",
