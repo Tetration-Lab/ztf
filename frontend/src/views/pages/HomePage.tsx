@@ -66,9 +66,9 @@ export const HomePage = () => {
           </Text>
           <Wrap py={2}>
             <ValueCard title="Available Bounty" value={139} />
-            <ValueCard title="Available ETH" value={100230} />
+            <ValueCard title="Available ETH" value={100230} isEth />
             <ValueCard title="Claimed Bounty" value={20} />
-            <ValueCard title="Claimed ETH" value={399} />
+            <ValueCard title="Claimed ETH" value={399} isEth />
           </Wrap>
           <Divider my={4} />
           <HStack justify="space-between">

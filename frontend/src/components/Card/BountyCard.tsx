@@ -6,6 +6,7 @@ import Link from "next/link";
 import numbro from "numbro";
 
 export const BountyCard = ({
+  id,
   amount,
   isClaimed,
   lastUpdated,
@@ -29,7 +30,7 @@ export const BountyCard = ({
         {title}
       </Text>
       <Text fontSize="sm">
-        Latest update: {lastUpdated.toLocaleDateString()}
+        Last updated: {lastUpdated.toLocaleDateString()}
       </Text>
       <Text color="gray.300" noOfLines={1}>
         By {formatAddress(owner)}
@@ -60,7 +61,7 @@ export const BountyCard = ({
         </Text>
       </Stack>
       <Divider my={2} opacity={0.1} />
-      <Button as={Link} href="/" w="full">
+      <Button as={Link} href={`/bounty/${id}`} w="full">
         View Bounty
       </Button>
     </Card>

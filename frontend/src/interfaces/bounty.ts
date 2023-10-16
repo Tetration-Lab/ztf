@@ -7,6 +7,10 @@ export interface Bounty {
   title: string;
   amount: number;
   lastUpdated: Date;
+  ipfsHash: string;
 }
 
-export interface BountyDetail {}
+export interface BountyDetail {
+  links?: { title: string; description?: string; url: string }[];
+  environment?: object;
+}

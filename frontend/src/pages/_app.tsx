@@ -7,12 +7,15 @@ import { DESCRIPTION, TITLE } from "@/constants/texts";
 import { wagmiConfig } from "@/constants/web3";
 import { WagmiConfig } from "wagmi";
 import { usePrices } from "@/stores/usePrices";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Font
 import "@fontsource/inconsolata/400.css";
 import "@fontsource/inconsolata/500.css";
 import "@fontsource/inconsolata/600.css";
 import "@fontsource/inconsolata/700.css";
+
+const client = new QueryClient();
 
 const App = ({ Component, pageProps }: AppProps) => {
   const [showChild, setShowChild] = useState(false);
@@ -34,7 +37,9 @@ const App = ({ Component, pageProps }: AppProps) => {
       ) : (
         <WagmiConfig config={wagmiConfig}>
           <ChakraProvider theme={theme}>
-            <Component {...pageProps} />
+            <QueryClientProvider client={client}>
+              <Component {...pageProps} />
+            </QueryClientProvider>
           </ChakraProvider>
         </WagmiConfig>
       )}
