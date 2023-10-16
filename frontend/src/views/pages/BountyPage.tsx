@@ -1,29 +1,38 @@
 import { EnvironmentCard } from "@/components/Card/EnvironmentCard";
+import { EnvironmentFlagCard } from "@/components/Card/EnvironmentFlagCard";
 import { ExternalLinkCard } from "@/components/Card/ExternalLinkCard";
 import { Navbar, Section } from "@/components/common";
 import { MOCK_BOUNTIES } from "@/constants/mocks";
+import { ENV_FLAG_INFO } from "@/constants/texts";
 import { usePrices } from "@/stores/usePrices";
 import { fetchBountyDetailIpfs } from "@/utils/ipfs";
 import { prettify } from "@/utils/json";
 import {
   Badge,
+  Collapse,
   HStack,
   Heading,
+  Icon,
+  IconButton,
   Skeleton,
   Stack,
   Text,
   Wrap,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { useRouter } from "next/router";
 import numbro from "numbro";
+import { FaChevronDown } from "react-icons/fa";
+import { FaComputer } from "react-icons/fa6";
 
 export const BountyPage = () => {
   const {
     query: { id },
   } = useRouter();
   const { ethUsd } = usePrices();
+  const envFlagDisclosure = useDisclosure({ defaultIsOpen: true });
 
   const bounty = useQuery({
     queryKey: ["bounty", id],
@@ -86,7 +95,22 @@ export const BountyPage = () => {
                 ))}
           </Wrap>
           <Heading fontSize="2xl">CTF Execution Environment</Heading>
-
+          <HStack>
+            <Heading fontSize="xl">Environment Flag Info</Heading>
+            <IconButton
+              size="sm"
+              icon={<Icon as={FaChevronDown} />}
+              aria-label={"Expand Info"}
+              onClick={envFlagDisclosure.onToggle}
+            />
+          </HStack>
+          <Collapse in={envFlagDisclosure.isOpen} animateOpacity>
+            <Wrap py={2}>
+              {ENV_FLAG_INFO.map((info, i) => (
+                <EnvironmentFlagCard key={i} {...info} />
+              ))}
+            </Wrap>
+          </Collapse>
           {detail.isLoading ? (
             <Skeleton my={2} h="lg" w="full" />
           ) : (
