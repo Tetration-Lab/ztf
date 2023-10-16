@@ -88,7 +88,7 @@ export const BountyPage = () => {
           </Skeleton>
           <Heading fontSize="2xl">Related Links</Heading>
           <Wrap py={2}>
-            {detail.isLoading
+            {detail.isLoading || !detail.data
               ? _.range(3).map((i) => <Skeleton key={i} h="128px" w="xs" />)
               : detail.data?.links?.map((link, i) => (
                   <ExternalLinkCard key={i} {...link} />
@@ -111,7 +111,7 @@ export const BountyPage = () => {
               ))}
             </Wrap>
           </Collapse>
-          {detail.isLoading ? (
+          {detail.isLoading || !detail.data ? (
             <Skeleton my={2} h="lg" w="full" />
           ) : (
             <EnvironmentCard environment={detail.data?.environment} />
