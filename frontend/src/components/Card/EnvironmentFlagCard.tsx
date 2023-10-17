@@ -17,11 +17,7 @@ export const EnvironmentFlagCard = ({
           <Text as="b" fontSize="lg" align="end" noOfLines={1}>
             {title}
           </Text>
-          {description && (
-            <Text align="end" noOfLines={6}>
-              {description}
-            </Text>
-          )}
+          {description && <Text align="end">{description}</Text>}
         </Stack>
       </HStack>
     </Card>

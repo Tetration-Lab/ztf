@@ -32,7 +32,7 @@ export const ENV_FLAG_INFO: {
   {
     title: "Target Condition",
     description:
-      "Target topic emitted from contract to be satisfied. The condition is evaluated on the EVM state after all transactions are simulated. Gas limit can be enforced conditionally",
+      "Target topic emitted from contract to be satisfied. The condition is evaluated on the EVM state after all transactions are simulated. Gas limit can also be enforced conditionally.",
     icon: FaBullseye,
   },
   {

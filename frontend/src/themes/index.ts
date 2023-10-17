@@ -1,6 +1,7 @@
 import { extendTheme } from "@chakra-ui/react";
 import { cardTheme } from "./Card";
 import { buttonTheme } from "./Button";
+import { tooltipTheme } from "./Tooltip";
 
 const breakpoints = {
   sm: "23.5em",
@@ -101,6 +102,7 @@ const theme = extendTheme({
   },
 
   components: {
+    Tooltip: tooltipTheme,
     Card: cardTheme,
     Button: buttonTheme,
   },

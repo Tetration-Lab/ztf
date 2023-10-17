@@ -12,11 +12,24 @@ export const EnvironmentCard = ({ environment }: { environment?: object }) => {
   const highlighted = useMemo(() => highlight(environment), [environment]);
 
   return (
-    <Card p={6} my={2}>
+    <Card
+      p={6}
+      my={2}
+      sx={{
+        _hover: {
+          ".copy-button": {
+            opacity: 1,
+          },
+        },
+      }}
+    >
       <IconButton
+        className="copy-button"
         icon={<Icon as={FaCopy} />}
         aria-label="Copy"
         position="absolute"
+        opacity={{ base: 1, md: 0 }}
+        transition="opacity 0.2s"
         top={4}
         right={4}
         onClick={() =>

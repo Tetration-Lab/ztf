@@ -6,7 +6,6 @@ import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { usePrices } from "@/stores/usePrices";
 import { fetchBountyDetailIpfs } from "@/utils/ipfs";
-import { prettify } from "@/utils/json";
 import {
   Badge,
   Collapse,
@@ -25,7 +24,6 @@ import _ from "lodash";
 import { useRouter } from "next/router";
 import numbro from "numbro";
 import { FaChevronDown } from "react-icons/fa";
-import { FaComputer } from "react-icons/fa6";
 
 export const BountyPage = () => {
   const {
@@ -99,7 +97,13 @@ export const BountyPage = () => {
             <Heading fontSize="xl">Environment Flag Info</Heading>
             <IconButton
               size="sm"
-              icon={<Icon as={FaChevronDown} />}
+              icon={
+                <Icon
+                  as={FaChevronDown}
+                  transform={envFlagDisclosure.isOpen ? "rotate(180deg)" : ""}
+                  transition="transform 0.2s ease-in-out"
+                />
+              }
               aria-label={"Expand Info"}
               onClick={envFlagDisclosure.onToggle}
             />
