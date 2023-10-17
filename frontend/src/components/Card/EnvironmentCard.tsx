@@ -1,3 +1,4 @@
+import { ONEDARK_COLOR_PROPS } from "@/constants/colors";
 import { highlight } from "@/utils/json";
 import { Card, Icon, IconButton, Text } from "@chakra-ui/react";
 import { useMemo } from "react";
@@ -47,22 +48,7 @@ export const EnvironmentCard = ({ environment }: { environment?: object }) => {
           __html: highlighted,
         }}
         sx={{
-          color: "#ABB2BF",
-          ".string": {
-            color: "#98c379",
-          },
-          ".number": {
-            color: "#E5C07B",
-          },
-          ".boolean": {
-            color: "#E5C07B",
-          },
-          ".null": {
-            color: "#61AFEF",
-          },
-          ".key": {
-            color: "#C678DD",
-          },
+          ...ONEDARK_COLOR_PROPS,
         }}
       ></Text>
     </Card>

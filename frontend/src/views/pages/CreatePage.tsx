@@ -1,8 +1,10 @@
 import { InfoSection } from "@/components/Section/InfoSection";
 import { AppHeader, Navbar, Section } from "@/components/common";
+import { ONEDARK_COLOR_PROPS } from "@/constants/colors";
 import { MOCK_CONTRACT_ADDRESS } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { chain } from "@/constants/web3";
+import { highlight } from "@/utils/json";
 import {
   Button,
   Code,
@@ -40,11 +42,30 @@ const SetupDetails = () => {
         index={2}
         title="Understanding CTF Environment"
         description="The CTF environment includes all the EVM bytecode, the contract ABI, the contract address, the target condition and etc. This will be used to simulate the transaction, and to verify against in the end."
-        steps={ENV_FLAG_INFO.map((e, i) => (
-          <Text key={i}>
-            <chakra.span as="b">{e.title}:</chakra.span> {e.description}
-          </Text>
-        ))}
+        steps={[
+          ...ENV_FLAG_INFO.map((e, i) => (
+            <Text key={i}>
+              <chakra.span as="b">{e.title}:</chakra.span> {e.description}
+            </Text>
+          )),
+          <Code
+            w="full"
+            whiteSpace="pre-wrap"
+            sx={{
+              ...ONEDARK_COLOR_PROPS,
+            }}
+            dangerouslySetInnerHTML={{
+              __html: highlight(`{
+  "spec": "...",
+  "block_config": { ... },
+  "target_condition": { ... },
+  "allowed_accounts": [...],
+  "accounts": { ... },
+  "storage": { ... }
+}`),
+            }}
+          />,
+        ]}
       />
       <InfoSection
         index={3}
@@ -63,7 +84,35 @@ const SetupDetails = () => {
           <Code w="full">let hash = env.hash();</Code>,
           "Export the environment to a JSON file. We recommend using `std::fs`.",
           <Code w="full">std::fs::write("env.json", env.to_string());</Code>,
-          "Upload the environment in JSON file to IPFS and get the CID, this CID is needed to create the bounty.",
+          "Wrap that environment object with `environment` key, and optionally add `links` key to include the links to other documentation or source code.",
+          "Final JSON file should look something like this,",
+          <Code
+            w="full"
+            whiteSpace="pre-wrap"
+            sx={{
+              ...ONEDARK_COLOR_PROPS,
+            }}
+            dangerouslySetInnerHTML={{
+              __html: highlight(`{
+  "links": [
+    {
+      "title": "...",
+      "description": "...",
+      "url": "..."
+    }
+  ],
+  "environment": {
+    "spec": "...",
+    "block_config": { ... },
+    "target_condition": { ... },
+    "allowed_accounts": [...],
+    "accounts": { ... },
+    "storage": { ... }
+  }
+}`),
+            }}
+          />,
+          "Finally, upload such file to IPFS and get the CID, this CID is needed to create the bounty.",
         ]}
       />
     </>
