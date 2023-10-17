@@ -16,7 +16,18 @@ import { HamburgerIcon, CloseIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import LinkNext from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
-import { MENU } from "@/constants/menu";
+import { Menu } from "@/interfaces/menu";
+
+const MENU: Menu[] = [
+  {
+    label: "Bounties",
+    href: "/",
+  },
+  {
+    label: "Create Bounty",
+    href: "/",
+  },
+];
 
 declare global {
   namespace JSX {
