@@ -7,5 +7,6 @@ edition = "2021"
 methods = { path = "../methods" }
 risc0-zkvm = { version = "0.18.0" }
 lib = { path = "../lib", features = ["debug-secret"] }
+ethers-core = { version = "=2.0.8", default-features = false }
 serde = "1.0"
 bonsai-sdk = "0.4.0"

@@ -1,6 +1,7 @@
-use std::{error::Error, time::Instant};
+use std::{error::Error, str::FromStr, time::Instant};
 
-use lib::{secrets::merkledrop, types::Receipt};
+use ethers_core::types::Address;
+use lib::{secrets::totally_not_a_backdoor, types::Receipt};
 use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     default_prover,
@@ -9,7 +10,8 @@ use risc0_zkvm::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let secret = merkledrop()?;
+    let mut secret = totally_not_a_backdoor()?;
+    secret.submitter = Address::from_str("0xD27647Ec30C49D3574a3AAC7aAa9758e930CCfaC")?;
 
     let env = ExecutorEnv::builder()
         .add_input(&to_vec(&secret)?)
@@ -22,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let receipt = from_slice::<Receipt, _>(&transcript.journal)?;
 
     println!("Receipt: {}", receipt);
-    println!("Metadata digest: {}", transcript.get_metadata()?.digest()?);
+    println!("Metadata: {:?}", transcript.get_metadata()?);
     println!("Time used to prove: {:.2}s", now.elapsed().as_secs_f64());
 
     transcript.verify(ZTF_ID)?;
