@@ -6,7 +6,10 @@ import { chain } from "@/constants/web3";
 import {
   Button,
   Code,
+  HStack,
   Heading,
+  Icon,
+  IconButton,
   Input,
   InputProps,
   Link,
@@ -17,6 +20,7 @@ import {
 import _ from "lodash";
 import { useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
+import { FaTrashCan } from "react-icons/fa6";
 import { Address } from "viem";
 
 const SetupDetails = () => {
@@ -94,7 +98,7 @@ const InputField = ({
         </Stack>
 
         <Stack w="full">
-          <Input {...inputProps} />
+          <Input {...inputProps} isInvalid={!!error} />
           {error && (
             <Text
               as="b"
@@ -126,8 +130,9 @@ interface BountyInfo {
 export const CreatePage = () => {
   const {
     register,
-    formState: { errors },
+    formState: { errors, isDirty },
     handleSubmit,
+    reset,
   } = useForm<BountyInfo>();
 
   const [isApproved, setIsApproved] = useState(false);
@@ -149,7 +154,7 @@ export const CreatePage = () => {
         <Navbar />
         <Stack spacing={4}>
           <Heading>Create Bounty</Heading>
-          <Text wordBreak="break-all">
+          <Text wordBreak="break-all" fontSize="lg">
             Contract lived in <chakra.span as="b">{chain.name}</chakra.span> at{" "}
             <chakra.span
               bg="gray.500"
@@ -162,7 +167,17 @@ export const CreatePage = () => {
             </chakra.span>
           </Text>
           <SetupDetails />
-          <Heading fontSize="2xl">Create Bounty</Heading>
+          <HStack justify="space-between">
+            <Heading fontSize="2xl">Create Bounty</Heading>
+            <IconButton
+              size="sm"
+              variant="outline"
+              aria-label="Clear"
+              icon={<Icon as={FaTrashCan} />}
+              isDisabled={!isDirty}
+              onClick={() => reset()}
+            />
+          </HStack>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={4}>
               <InputField

@@ -34,7 +34,7 @@ export const InfoSection = ({
           {index}. {title}
         </Heading>
         <IconButton
-          size="sm"
+          size="xs"
           icon={
             <Icon
               as={FaChevronDown}
