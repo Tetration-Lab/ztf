@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use ethers_core::types::H256;
 use revm::primitives::{Address, HashMap, HashSet, SpecId, U256};
@@ -17,6 +17,14 @@ pub struct Environment {
     pub allowed_accounts: HashSet<Address>,
     pub accounts: HashMap<Address, Account>,
     pub storage: HashMap<Address, HashMap<U256, U256>>,
+}
+
+impl FromStr for Environment {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
 }
 
 impl Default for Environment {
