@@ -37,17 +37,18 @@ export const ENV_FLAG_INFO: {
   },
   {
     title: "Allowed Accounts",
-    description: "Allowed accounts to be used/create transactions",
+    description:
+      "Allowed accounts to be used/create transactions. If simulated transaction is not created by allowed accounts, it will be rejected.",
     icon: FaUser,
   },
   {
     title: "Accounts",
-    description: "Initial account's balance and optinally contract code",
+    description: "Initial account's balance and optinally contract code.",
     icon: FaUsers,
   },
   {
     title: "Storage",
-    description: "Initial account's storage states",
+    description: "Initial account's storage states.",
     icon: FaStore,
   },
 ];

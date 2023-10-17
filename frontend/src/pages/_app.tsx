@@ -30,8 +30,8 @@ const App = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <Head>
-        <title>{TITLE}</title>
-        <meta name="description" content={DESCRIPTION} />
+        <title key="title">{TITLE}</title>
+        <meta name="description" content={DESCRIPTION} key="description" />
       </Head>
       {typeof window === "undefined" || !showChild ? (
         <></>

@@ -5,9 +5,10 @@ export interface Bounty {
   owner: Address;
   isClaimed: boolean;
   title: string;
-  amount: number;
   lastUpdated: Date;
   ipfsHash: string;
+  amount: number;
+  currency: Address;
 }
 
 export interface BountyDetail {

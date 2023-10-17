@@ -3,6 +3,7 @@ import { cardTheme } from "./Card";
 import { buttonTheme } from "./Button";
 import { tooltipTheme } from "./Tooltip";
 import { skeletonTheme } from "./Skeleton";
+import { codeTheme } from "./Code";
 
 const breakpoints = {
   sm: "23.5em",
@@ -107,6 +108,7 @@ const theme = extendTheme({
     Card: cardTheme,
     Button: buttonTheme,
     Skeleton: skeletonTheme,
+    Code: codeTheme,
   },
 
   fonts: {

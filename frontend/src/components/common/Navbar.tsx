@@ -25,7 +25,11 @@ const MENU: Menu[] = [
   },
   {
     label: "Create Bounty",
-    href: "/",
+    href: "/create",
+  },
+  {
+    label: "About",
+    href: "/about",
   },
 ];
 
@@ -95,10 +99,17 @@ const Navbar = () => {
 };
 
 const DesktopNav = () => {
+  const router = useRouter();
+
   return (
     <Stack direction={"row"} spacing={10}>
       {MENU.map((navItem, i) => (
-        <Link key={i} as={LinkNext} href={navItem.href}>
+        <Link
+          key={i}
+          as={LinkNext}
+          href={navItem.href}
+          fontWeight={router.pathname === navItem.href ? "bold" : "normal"}
+        >
           {navItem.label}
         </Link>
       ))}
@@ -135,7 +146,7 @@ const MobileNavItem = ({ label, children, href }: any) => {
       >
         <Center>
           <ul>
-            <Text fontWeight={600}>
+            <Text fontWeight={router.pathname === href ? "bold" : "normal"}>
               <li> {label}</li>
             </Text>
           </ul>

@@ -13,7 +13,6 @@ import {
   FaEthereum,
   FaFile,
   FaGithub,
-  FaLocationArrow,
   FaTwitter,
 } from "react-icons/fa";
 
@@ -48,7 +47,7 @@ export const ExternalLinkCard = ({
             {title}
           </Text>
           {description && (
-            <Text align="end" noOfLines={6}>
+            <Text align="end" noOfLines={6} color="gray.200">
               {description}
             </Text>
           )}

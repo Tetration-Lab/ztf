@@ -1,3 +1,4 @@
+import { getDenom } from "@/constants/currency";
 import { Bounty } from "@/interfaces/bounty";
 import { usePrices } from "@/stores/usePrices";
 import { formatAddress } from "@/utils/address";
@@ -12,9 +13,9 @@ export const BountyCard = ({
   lastUpdated,
   owner,
   title,
+  currency,
 }: Bounty) => {
-  const { ethUsd } = usePrices();
-  const usdAmount = amount * ethUsd;
+  const { getPrice } = usePrices();
 
   return (
     <Card
@@ -49,11 +50,11 @@ export const BountyCard = ({
             mantissa: 2,
             trimMantissa: true,
           })}
-          eth
+          {getDenom(currency)}
         </Text>
         <Text as="b" fontSize="lg" color="gray.300">
           ~$
-          {numbro(usdAmount).format({
+          {numbro(amount * getPrice(getDenom(currency))).format({
             average: true,
             mantissa: 2,
             trimMantissa: true,

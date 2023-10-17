@@ -1,7 +1,8 @@
 import { EnvironmentCard } from "@/components/Card/EnvironmentCard";
 import { EnvironmentFlagCard } from "@/components/Card/EnvironmentFlagCard";
 import { ExternalLinkCard } from "@/components/Card/ExternalLinkCard";
-import { Navbar, Section } from "@/components/common";
+import { AppHeader, Navbar, Section } from "@/components/common";
+import { getDenom } from "@/constants/currency";
 import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { usePrices } from "@/stores/usePrices";
@@ -30,7 +31,7 @@ export const BountyPage = () => {
   const {
     query: { id },
   } = useRouter();
-  const { ethUsd } = usePrices();
+  const { getPrice } = usePrices();
   const envFlagDisclosure = useDisclosure({ defaultIsOpen: true });
 
   const bounty = useQuery({
@@ -50,12 +51,13 @@ export const BountyPage = () => {
 
   return (
     <>
+      <AppHeader title={`Bounty ${bounty.data?.title}`} />
       <Section>
         <Navbar />
         <Stack spacing={2}>
           <Skeleton isLoaded={!!bounty.data && !bounty.isLoading}>
             <HStack justify="space-between" spacing={{ base: 2, md: 10 }}>
-              <Stack>
+              <Stack spacing={0}>
                 <Heading maxW="3xl">Bounty {bounty.data?.title}</Heading>
                 <Badge
                   w="fit-content"
@@ -65,18 +67,21 @@ export const BountyPage = () => {
                   {bounty.data?.isClaimed ? "Claimed" : "Available"}
                 </Badge>
               </Stack>
-              <Stack align="end">
+              <Stack align="end" spacing={0}>
                 <Heading>
                   {numbro(bounty.data?.amount!).format({
                     average: true,
                     mantissa: 2,
                     trimMantissa: true,
                   })}
-                  eth
+                  {getDenom(bounty.data?.currency!)}
                 </Heading>
-                <Text fontSize="xl">
+                <Text fontSize="xl" color="gray.300">
                   ~$
-                  {numbro(bounty.data?.amount! * ethUsd).format({
+                  {numbro(
+                    bounty.data?.amount! *
+                      getPrice(getDenom(bounty.data?.currency!))
+                  ).format({
                     average: true,
                     mantissa: 2,
                     trimMantissa: true,

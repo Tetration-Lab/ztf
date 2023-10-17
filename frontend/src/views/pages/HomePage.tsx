@@ -6,10 +6,9 @@ import {
   Divider,
   HStack,
   IconButton,
-  Spacer,
   Link,
 } from "@chakra-ui/react";
-import { Section, Navbar, Footer } from "@/components/common";
+import { Section, Navbar, Footer, AppHeader } from "@/components/common";
 import { ValueCard } from "@/components/Card/ValueCard";
 import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { BountyCard } from "@/components/Card/BountyCard";
@@ -50,6 +49,7 @@ export const HomePage = () => {
 
   return (
     <>
+      <AppHeader title="Bounties" />
       <Section>
         <Navbar />
         <Stack>
@@ -66,9 +66,9 @@ export const HomePage = () => {
           </Text>
           <Wrap py={2}>
             <ValueCard title="Available Bounty" value={139} />
-            <ValueCard title="Available ETH" value={100230} isEth />
+            <ValueCard title="Available" value={100230} valuePrefix="$" />
             <ValueCard title="Claimed Bounty" value={20} />
-            <ValueCard title="Claimed ETH" value={399} isEth />
+            <ValueCard title="Claimed" value={399} valuePrefix="$" />
           </Wrap>
           <Divider my={4} />
           <HStack justify="space-between">
