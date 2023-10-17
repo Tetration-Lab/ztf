@@ -1,6 +1,6 @@
 import { Menu } from "@/interfaces/menu";
 
-const MENU: Menu[] = [
+export const MENU: Menu[] = [
   {
     label: "Bounties",
     href: "/",
@@ -10,5 +10,3 @@ const MENU: Menu[] = [
     href: "/",
   },
 ];
-
-export default MENU;
