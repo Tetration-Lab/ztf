@@ -5,6 +5,7 @@ import { Navbar, Section } from "@/components/common";
 import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { usePrices } from "@/stores/usePrices";
+import { formatAddress } from "@/utils/address";
 import { fetchBountyDetailIpfs } from "@/utils/ipfs";
 import {
   Badge,
@@ -52,7 +53,7 @@ export const BountyPage = () => {
       <Section>
         <Navbar />
         <Stack spacing={2}>
-          <Skeleton isLoaded={!!bounty.data?.title}>
+          <Skeleton isLoaded={!!bounty.data && !bounty.isLoading}>
             <HStack justify="space-between" spacing={{ base: 2, md: 10 }}>
               <Stack>
                 <Heading maxW="3xl">Bounty {bounty.data?.title}</Heading>
@@ -83,6 +84,22 @@ export const BountyPage = () => {
                 </Text>
               </Stack>
             </HStack>
+          </Skeleton>
+          <Skeleton
+            isLoaded={!!bounty.data && !bounty.isLoading}
+            as={Stack}
+            spacing={0}
+          >
+            <Text>ID: {bounty.data?.id}</Text>
+            <Text display={{ base: "none", md: "block" }}>
+              Owner: {bounty.data?.owner.toLowerCase()}
+            </Text>
+            <Text display={{ base: "block", md: "none" }}>
+              Owner: {formatAddress(bounty.data?.owner.toLowerCase()!)}
+            </Text>
+            <Text>
+              Last Updated: {bounty.data?.lastUpdated.toLocaleDateString()}
+            </Text>
           </Skeleton>
           <Heading fontSize="2xl">Related Links</Heading>
           <Wrap py={2}>
