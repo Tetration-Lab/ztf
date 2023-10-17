@@ -37,7 +37,7 @@ const theme = extendTheme({
       500: "#A73DCD",
       600: "#892AAB",
       700: "#6C1B89",
-      800: "#F1C9FF",
+      800: "#4F0E67",
       900: "#340645",
     },
     accent_blue: {

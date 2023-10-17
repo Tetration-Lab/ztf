@@ -37,6 +37,7 @@ export const EnvironmentCard = ({ environment }: { environment?: object }) => {
         }
       />
       <Text
+        fontFamily="Fira Code"
         wordBreak="break-all"
         display="inline-block"
         overflowWrap="break-word"

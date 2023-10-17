@@ -13,6 +13,7 @@
     "@chakra-ui/react": "^2.7.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@fontsource/fira-code": "^5.0.13",
     "@fontsource/inconsolata": "^5.0.13",
     "@tanstack/react-query": "^4.36.1",
     "@types/node": "20.2.3",
