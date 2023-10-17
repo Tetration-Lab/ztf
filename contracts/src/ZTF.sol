@@ -3,21 +3,33 @@ pragma solidity ^0.8.13;
 import "./IFlag.sol";
 import "./ICallback.sol";
 import "./IRiscZeroVerifier.sol";
+import "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/token/ERC20/IERC20.sol";
 
 contract ZTF {
+    using SafeERC20 for IERC20;
+
     struct Bounty {
-        uint bounty;
         address flag;
         address owner;
         address callback;
+        address asset;
+        uint amount;
         bool claimed;
+        uint lastUpdated;
+        bytes32 envHash;
+        string title;
+        string link; // ipfs, github, etc
     }
+
     struct secondaryCallback {
         address callback;
         uint targetBounty;
-        uint bonus;
+        address asset;
+        uint amount;
         bool claimed;
     }
+
     struct ZClaim {
         address claimer;
         address flag;
@@ -27,51 +39,128 @@ contract ZTF {
         bytes seal;
     }
 
-    uint numBounty = 0;
-    uint numClaimed = 0;
+    struct Asset {
+        address asset;
+        uint totalBounty;
+        uint claimed;
+    }
 
-    uint public lastBounty = 0;
-    uint public lastSecondaryCallback = 0;
+    uint public numBounty = 0;
+    uint public numCallback = 0;
+    uint public numClaimed = 0;
+    uint public numAsset = 0;
+
     mapping(uint => Bounty) public bountyList;
     mapping(uint => secondaryCallback) public secondaryCallbacks;
     bytes32 public immutable IMG_ID;
     address public immutable RISK_ZERO_VERIFIER;
+    mapping(uint => Asset) public assetList;
+    mapping(address => uint) public assetID;
 
-    constructor(bytes32 imgID, address verifier) {
+    constructor(bytes32 imgID, address verifier, address[] memory initAsset) {
         IMG_ID = imgID;
         RISK_ZERO_VERIFIER = verifier;
+        for (uint i = 0; i < initAsset.length; i++) {
+            _addNewAsset(initAsset[i]);
+        }
+    }
+
+    function getBountyPage(
+        uint num,
+        uint skip
+    ) public view returns (Bounty[] memory) {
+        Bounty[] memory result = new Bounty[](num);
+        for (uint i = 0; i < num; i++) {
+            result[i] = bountyList[i + skip];
+        }
+        return result;
+    }
+
+    function getCallbackPage(
+        uint num,
+        uint skip
+    ) public view returns (secondaryCallback[] memory) {
+        secondaryCallback[] memory result = new secondaryCallback[](num);
+        for (uint i = 0; i < num; i++) {
+            result[i] = secondaryCallbacks[i + skip];
+        }
+        return result;
+    }
+
+    function getAssetStatPage(
+        uint num,
+        uint skip
+    ) public view returns (Asset[] memory) {
+        Asset[] memory result = new Asset[](num);
+        for (uint i = 0; i < num; i++) {
+            result[i] = assetList[i + skip];
+        }
+        return result;
+    }
+
+    function _addNewAsset(address asset) internal {
+        uint id = numAsset + 1;
+        numAsset = id;
+        assetList[id] = Asset({asset: asset, totalBounty: 0, claimed: 0});
+        assetID[asset] = id;
     }
 
     // create a new bounty.
-    function newBounty(address flag, address callback) external payable {
-        uint id = lastBounty + 1;
-        lastBounty = id;
+    function newBounty(
+        address flag,
+        address callback,
+        address asset,
+        uint amount,
+        string memory title,
+        string memory link,
+        bytes32 envHash
+    ) external {
+        uint id = numBounty + 1;
+        numBounty = id;
         bountyList[id] = Bounty({
-            bounty: msg.value,
             flag: flag,
             owner: msg.sender,
             callback: callback,
-            claimed: false
+            asset: asset,
+            amount: amount,
+            claimed: false,
+            lastUpdated: block.timestamp,
+            title: title,
+            link: link,
+            envHash: envHash
         });
         numBounty += 1;
+        if (assetID[asset] == 0) {
+            _addNewAsset(asset);
+        }
+        assetList[assetID[asset]].totalBounty += amount;
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
     }
 
     // add bounty to an existing bounty
-    function addBounty(uint bountyID) external payable {
+    function addBounty(uint bountyID, uint amount) external {
         require(
             bountyList[bountyID].owner != address(0),
             "Bounty does not exist"
         );
-        bountyList[bountyID].bounty += msg.value;
+        bountyList[bountyID].amount += amount;
+        assetList[assetID[bountyList[bountyID].asset]].totalBounty += amount;
+        IERC20(bountyList[bountyID].asset).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
     }
 
     // add secondary callback to a bounty. can be claim after the bounty is claimed
-    function addSecondaryCallback(
+    function newSecondaryCallback(
         address callback,
-        uint targetBounty
-    ) external payable {
-        uint id = lastSecondaryCallback + 1;
-        lastSecondaryCallback = id;
+        uint targetBounty,
+        address asset,
+        uint amount
+    ) external {
+        uint id = numCallback + 1;
+        numCallback = id;
         require(
             bountyList[targetBounty].owner != address(0),
             "Bounty does not exist"
@@ -79,9 +168,31 @@ contract ZTF {
         secondaryCallbacks[id] = secondaryCallback({
             callback: callback,
             targetBounty: targetBounty,
-            bonus: msg.value,
+            asset: asset,
+            amount: amount,
             claimed: false
         });
+        numCallback += 1;
+        if (assetID[asset] == 0) {
+            _addNewAsset(asset);
+        }
+        assetList[assetID[asset]].totalBounty += amount;
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+    }
+
+    function addToSecondaryCallback(uint callbackID, uint amount) external {
+        require(
+            secondaryCallbacks[callbackID].callback != address(0),
+            "Secondary callback does not exist"
+        );
+        secondaryCallbacks[callbackID].amount += amount;
+        assetList[assetID[secondaryCallbacks[callbackID].asset]]
+            .totalBounty += amount;
+        IERC20(secondaryCallbacks[callbackID].asset).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
     }
 
     // capture flag with a valid proof
@@ -109,15 +220,20 @@ contract ZTF {
         // update
         bountyList[bountyID].claimed = true;
 
-        // pay
-        uint totalBounty = bountyList[bountyID].bounty;
-        payable(claimData.claimer).transfer(totalBounty);
-
         // callback
         ICallback(bountyList[bountyID].callback).callback(
             bountyList[bountyID].flag
         );
+
+        // pay
+        IERC20(bountyList[bountyID].asset).safeTransfer(
+            msg.sender,
+            bountyList[bountyID].amount
+        );
         numClaimed += 1;
+        assetList[assetID[bountyList[bountyID].asset]].claimed += bountyList[
+            bountyID
+        ].amount;
     }
 
     // trigger list of secondary callbacks if bounty is claimed
@@ -140,7 +256,12 @@ contract ZTF {
             ICallback(secondaryCallbacks[targets[i]].callback).callback(
                 bountyList[secondaryCallbacks[targets[i]].targetBounty].flag
             );
-            payable(msg.sender).transfer(secondaryCallbacks[targets[i]].bonus);
+            IERC20(secondaryCallbacks[targets[i]].asset).safeTransfer(
+                msg.sender,
+                secondaryCallbacks[targets[i]].amount
+            );
+            assetList[assetID[secondaryCallbacks[targets[i]].asset]]
+                .claimed += secondaryCallbacks[targets[i]].amount;
         }
     }
 }
