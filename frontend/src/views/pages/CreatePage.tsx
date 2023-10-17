@@ -6,7 +6,6 @@ import { chain } from "@/constants/web3";
 import {
   Button,
   Code,
-  HStack,
   Heading,
   Input,
   InputProps,
@@ -16,6 +15,7 @@ import {
   chakra,
 } from "@chakra-ui/react";
 import _ from "lodash";
+import { useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
 import { Address } from "viem";
 
@@ -130,8 +130,16 @@ export const CreatePage = () => {
     handleSubmit,
   } = useForm<BountyInfo>();
 
+  const [isApproved, setIsApproved] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
   const onSubmit = (data: BountyInfo) => {
-    console.log(data);
+    if (!isApproved) {
+      console.log("Approving...", data);
+    } else {
+      console.log("Creating...", data);
+    }
   };
 
   return (
@@ -234,8 +242,20 @@ export const CreatePage = () => {
               py={8}
               direction={{ base: "column", md: "row" }}
             >
-              <Button isDisabled>Approve Bounty Payment</Button>
-              <Button type="submit">Create Bounty</Button>
+              <Button
+                isDisabled={isApproved}
+                isLoading={isApproving}
+                type="submit"
+              >
+                Approve Bounty Payment
+              </Button>
+              <Button
+                isDisabled={!isApproved}
+                isLoading={isCreating}
+                type="submit"
+              >
+                Create Bounty
+              </Button>
             </Stack>
           </form>
         </Stack>
