@@ -44,6 +44,7 @@ import {
   useWalletClient,
 } from "wagmi";
 import { default as NextLink } from "next/link";
+import { InputField } from "@/components/Input/InputField";
 
 const SetupDetails = () => {
   return (
@@ -139,57 +140,6 @@ const SetupDetails = () => {
   );
 };
 
-const InputField = ({
-  title,
-  description,
-  inputProps,
-  error,
-  customInput,
-}: {
-  title: string;
-  description: string;
-  inputProps?: InputProps;
-  error?: FieldError;
-  customInput?: React.ReactNode;
-}) => {
-  return (
-    <Stack spacing={2}>
-      <Stack
-        direction={{ base: "column", md: "row" }}
-        align={{ base: "start", md: "center" }}
-        spacing={{ base: 2, md: 4 }}
-      >
-        <Stack spacing={0} w={{ base: "full", md: "lg" }}>
-          <Text fontWeight="bold" fontSize="lg">
-            {title}
-          </Text>
-          <Text color="gray.200" lineHeight={1.1}>
-            {description}
-          </Text>
-        </Stack>
-
-        <Stack w="full">
-          {customInput ?? <Input {...inputProps} isInvalid={!!error} />}
-          {error && (
-            <Text
-              as="b"
-              color="error"
-              position="absolute"
-              transform="auto"
-              translateY="170%"
-              zIndex={1}
-            >
-              {error.type === "validate"
-                ? error?.message ?? "Error"
-                : _.startCase(error.type)}
-            </Text>
-          )}
-        </Stack>
-      </Stack>
-    </Stack>
-  );
-};
-
 interface BountyInfo {
   currency: Address;
   amount: number;
@@ -265,11 +215,11 @@ export const CreatePage = () => {
           args: [
             ZERO_ADDRESS,
             ZERO_ADDRESS,
-            watch("currency", ZERO_ADDRESS),
+            data.currency,
             amount,
-            watch("title"),
-            watch("ipfsHash"),
-            watch("envHash", ZERO_BYTES32) as Hex,
+            data.title,
+            data.ipfsHash,
+            data.envHash as Hex,
           ],
         });
         const hash = await wallet?.writeContract(request);
@@ -404,7 +354,7 @@ export const CreatePage = () => {
                     {...register("currency", {
                       required: true,
                       validate: (v) =>
-                        /0x[0-9a-fA-F]{20}/g.test(v) ? true : "Invalid address",
+                        /0x[0-9a-fA-F]{40}/g.test(v) ? true : "Invalid address",
                     })}
                     placeholder="Select currency"
                     isInvalid={!!errors.currency}

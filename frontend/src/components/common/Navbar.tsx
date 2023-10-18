@@ -28,6 +28,10 @@ const MENU: Menu[] = [
     href: "/create",
   },
   {
+    label: "Claim Bounty",
+    href: "/claim",
+  },
+  {
     label: "About",
     href: "/about",
   },
