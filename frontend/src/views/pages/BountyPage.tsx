@@ -28,7 +28,7 @@ import { useRouter } from "next/router";
 import numbro from "numbro";
 import { useMemo } from "react";
 import { FaChevronDown } from "react-icons/fa";
-import { useChainId, useContractRead } from "wagmi";
+import { useChainId, useContractRead, useEnsName } from "wagmi";
 
 export const BountyPage = () => {
   const {
@@ -43,6 +43,9 @@ export const BountyPage = () => {
     abi: ZTF_ABI,
     functionName: "bountyList",
     args: [BigInt(Number(id) || 0)],
+  });
+  const { data: ens } = useEnsName({
+    address: data?.owner,
   });
   const bounty = useMemo(
     () =>
@@ -103,10 +106,10 @@ export const BountyPage = () => {
           <Skeleton isLoaded={!!bounty && !isLoading} as={Stack} spacing={0}>
             <Text>ID: {bounty?.id}</Text>
             <Text display={{ base: "none", md: "block" }}>
-              Owner: {bounty?.owner.toLowerCase()}
+              Owner: {ens ?? bounty?.owner.toLowerCase()}
             </Text>
             <Text display={{ base: "block", md: "none" }}>
-              Owner: {formatAddress(bounty?.owner.toLowerCase()!)}
+              Owner: {ens ?? formatAddress(bounty?.owner.toLowerCase()!)}
             </Text>
             <Text>
               Last Updated: {bounty?.lastUpdated.toLocaleDateString()}

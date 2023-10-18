@@ -8,12 +8,15 @@ import {
   Heading,
   Icon,
   IconButton,
+  Link,
   Modal,
   ModalBody,
   ModalContent,
   ModalHeader,
   ModalOverlay,
   Stack,
+  Text,
+  chakra,
   useDisclosure,
 } from "@chakra-ui/react";
 import _ from "lodash";
@@ -21,7 +24,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex } from "viem";
-import { useChainId, usePublicClient, useWalletClient } from "wagmi";
+import {
+  useChainId,
+  useNetwork,
+  usePublicClient,
+  useWalletClient,
+} from "wagmi";
 import { InputField } from "@/components/Input/InputField";
 
 const SetupDetails = () => {
@@ -102,6 +110,8 @@ export const ClaimPage = () => {
     reset,
   } = useForm<BountyClaimInfo>();
   const chainId = useChainId();
+  const { chain } = useNetwork();
+
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
@@ -182,6 +192,19 @@ export const ClaimPage = () => {
         <Navbar />
         <Stack spacing={4}>
           <Heading>Claim Bounty</Heading>
+          <Text wordBreak="break-all" fontSize="lg">
+            Contract lived in <chakra.span as="b">{chain?.name}</chakra.span> at{" "}
+            <chakra.span
+              bg="gray.500"
+              fontFamily="Fira Code"
+              as={Link}
+              isExternal
+              href={`${chain?.blockExplorers?.default.url}/address/${contract.address}`}
+            >
+              {contract.address}
+            </chakra.span>
+          </Text>
+
           <SetupDetails />
           <HStack justify="space-between">
             <Heading fontSize="2xl">Claim Bounty</Heading>

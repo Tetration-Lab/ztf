@@ -5,6 +5,7 @@ import { formatAddress } from "@/utils/address";
 import { Badge, Button, Card, Divider, Stack, Text } from "@chakra-ui/react";
 import Link from "next/link";
 import numbro from "numbro";
+import { useEnsName } from "wagmi";
 
 export const BountyCard = ({
   id,
@@ -16,6 +17,9 @@ export const BountyCard = ({
   currency,
 }: Bounty) => {
   const { getPrice } = usePrices();
+  const { data: ens } = useEnsName({
+    address: owner,
+  });
 
   return (
     <Card
@@ -35,7 +39,7 @@ export const BountyCard = ({
         Last updated: {lastUpdated.toLocaleDateString()}
       </Text>
       <Text color="gray.300" noOfLines={1}>
-        By {formatAddress(owner)}
+        By {ens ?? formatAddress(owner)}
       </Text>
       <Badge colorScheme={isClaimed ? "red" : "green"} fontSize="sm" my={1}>
         {isClaimed ? "Claimed" : "Available"}
