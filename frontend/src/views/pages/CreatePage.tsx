@@ -1,7 +1,7 @@
 import { InfoSection } from "@/components/Section/InfoSection";
 import { AppHeader, Navbar, Section } from "@/components/common";
 import { ONEDARK_COLOR_PROPS } from "@/constants/colors";
-import { MOCK_CONTRACT_ADDRESS } from "@/constants/mocks";
+import { getZTFContract } from "@/constants/contracts";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { highlight } from "@/utils/json";
 import {
@@ -23,7 +23,7 @@ import { useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address } from "viem";
-import { useAccount, useNetwork } from "wagmi";
+import { useChainId, useNetwork } from "wagmi";
 
 const SetupDetails = () => {
   return (
@@ -197,6 +197,8 @@ export const CreatePage = () => {
   };
 
   const { chain } = useNetwork();
+  const chainId = useChainId();
+  const contract = getZTFContract(chainId);
 
   return (
     <>
@@ -212,9 +214,9 @@ export const CreatePage = () => {
               fontFamily="Fira Code"
               as={Link}
               isExternal
-              href={`${chain?.blockExplorers?.default.url}/address/${MOCK_CONTRACT_ADDRESS}`}
+              href={`${chain?.blockExplorers?.default.url}/address/${contract}`}
             >
-              {MOCK_CONTRACT_ADDRESS.toLowerCase()}
+              {contract}
             </chakra.span>
           </Text>
           <SetupDetails />

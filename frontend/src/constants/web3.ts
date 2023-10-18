@@ -5,7 +5,7 @@ import { createWeb3Modal } from "@web3modal/wagmi";
 import { DESCRIPTION, TITLE } from "./texts";
 import theme from "@/themes";
 import { publicProvider } from "wagmi/providers/public";
-import { goerli, mantleTestnet, scrollSepolia } from "viem/chains";
+import { goerli } from "viem/chains";
 
 const metadata = {
   name: TITLE,
@@ -16,8 +16,8 @@ const metadata = {
 
 export const chains = [
   { ...goerli, image: "/images/chains/ethereum.png" },
-  { ...scrollSepolia, image: "/images/chains/scroll.png" },
-  { ...mantleTestnet, image: "/images/chains/mantle.svg" },
+  //{ ...scrollSepolia, image: "/images/chains/scroll.png" },
+  //{ ...mantleTestnet, image: "/images/chains/mantle.svg" },
 ];
 
 const { publicClient } = configureChains(chains, [

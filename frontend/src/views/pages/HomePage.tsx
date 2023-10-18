@@ -14,15 +14,23 @@ import { Section, Navbar, Footer, AppHeader } from "@/components/common";
 import { ValueCard } from "@/components/Card/ValueCard";
 import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { BountyCard } from "@/components/Card/BountyCard";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bounty } from "@/interfaces/bounty";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ExternalLinkIcon,
 } from "@chakra-ui/icons";
-import { useAccount, useChainId, useSwitchNetwork } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useContractReads,
+  useSwitchNetwork,
+} from "wagmi";
 import { chains, web3Modal } from "@/constants/web3";
+import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
+import { usePrices } from "@/stores/usePrices";
+import { getDecimal, getDenom } from "@/constants/currency";
 
 export const HomePage = () => {
   const {
@@ -32,12 +40,47 @@ export const HomePage = () => {
   } = useSwitchNetwork();
   const { isConnected } = useAccount();
   const chainId = useChainId();
+  const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
+
+  const { getPrice } = usePrices();
 
   const PAGE_SIZE = 10;
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [isExhausted, setIsExhausted] = useState(false);
   const [bounties, setBounties] = useState<Bounty[]>([]);
+
+  const { data, isLoading: isLoadingStats } = useContractReads({
+    contracts: [
+      {
+        ...contract,
+        functionName: "numBounty",
+      },
+      {
+        ...contract,
+        functionName: "numClaimed",
+      },
+      {
+        ...contract,
+        functionName: "getAssetStatPage",
+        args: [2n, 0n],
+      },
+    ],
+  });
+
+  const bountyPrize = useMemo(() => {
+    const assets = data?.[2]?.result;
+    var total = 0;
+    var claimed = 0;
+    assets?.forEach((a) => {
+      const denom = getDenom(a.asset);
+      const decimal = getDecimal(a.asset);
+      const price = getPrice(denom);
+      total += (Number(a.total) * price) / 10 ** decimal;
+      claimed += (Number(a.claimed) * price) / 10 ** decimal;
+    });
+    return [total, claimed] as const;
+  }, [data?.[2]?.result, getPrice]);
 
   useEffect(() => {
     const load = async () => {
@@ -86,10 +129,14 @@ export const HomePage = () => {
                   gap={2}
                   isLoading={isSwitching && pendingChainId === c.id}
                   isActive={isConnected && chainId === c.id}
-                  onClick={async () => {
-                    if (!isConnected || !switchNetwork) web3Modal.open();
-                    else switchNetwork(c.id);
-                  }}
+                  onClick={
+                    isSwitching || chainId === c.id
+                      ? undefined
+                      : async () => {
+                          if (!isConnected || !switchNetwork) web3Modal.open();
+                          else switchNetwork(c.id);
+                        }
+                  }
                 >
                   <Image key={i} src={c.image} boxSize="24px" />
                   <Text as="b">{c.name}</Text>
@@ -98,10 +145,28 @@ export const HomePage = () => {
             </Wrap>
           </Stack>
           <Wrap py={2}>
-            <ValueCard title="Available Bounty" value={139} />
-            <ValueCard title="Available" value={100230} valuePrefix="$" />
-            <ValueCard title="Claimed Bounty" value={20} />
-            <ValueCard title="Claimed" value={399} valuePrefix="$" />
+            <ValueCard
+              title="Available Bounty"
+              value={Number(data?.[0]?.result)}
+              isLoading={isLoadingStats}
+            />
+            <ValueCard
+              title="Total"
+              value={bountyPrize[0]}
+              valuePrefix="$"
+              isLoading={isLoadingStats}
+            />
+            <ValueCard
+              title="Claimed Bounty"
+              value={Number(data?.[1]?.result)}
+              isLoading={isLoadingStats}
+            />
+            <ValueCard
+              title="Claimed"
+              value={bountyPrize[1]}
+              valuePrefix="$"
+              isLoading={isLoadingStats}
+            />
           </Wrap>
           <Divider my={4} />
           <HStack justify="space-between">
