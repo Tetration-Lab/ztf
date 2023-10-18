@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use revm::primitives::{Address, Bytes, CreateScheme, TransactTo, TxEnv, U256};
 use serde::{Deserialize, Serialize};
@@ -33,6 +33,14 @@ impl Display for TxSim {
     }
 }
 
+impl FromStr for TxSim {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
+
 impl From<Transaction> for TxSim {
     fn from(val: Transaction) -> Self {
         TxSim::Transaction(val)
@@ -61,6 +69,14 @@ impl Default for Transaction {
             gas_limit: Default::default(),
             access_list: Default::default(),
         }
+    }
+}
+
+impl FromStr for Transaction {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
     }
 }
 
