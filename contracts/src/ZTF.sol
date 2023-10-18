@@ -19,7 +19,7 @@ struct Bounty {
     string title;
 }
 
-struct secondaryCallback {
+struct SecondaryCallback {
     address callback;
     uint targetBounty;
     address asset;
@@ -36,7 +36,7 @@ struct ZClaim {
 
 struct Asset {
     address asset;
-    uint totalBounty;
+    uint total;
     uint claimed;
 }
 
@@ -52,7 +52,7 @@ contract ZTF is Ownable {
     uint public numAsset = 0;
 
     mapping(uint => Bounty) public bountyList;
-    mapping(uint => secondaryCallback) public secondaryCallbacks;
+    mapping(uint => SecondaryCallback) public secondaryCallbacks;
     mapping(uint => Asset) public assetList;
     mapping(address => uint) public assetID;
 
@@ -72,6 +72,7 @@ contract ZTF is Ownable {
         uint num,
         uint skip
     ) public view returns (Bounty[] memory) {
+        num = num > numBounty - skip ? numBounty - skip : num;
         Bounty[] memory result = new Bounty[](num);
         for (uint i = 0; i < num; i++) {
             result[i] = bountyList[i + skip];
@@ -82,8 +83,9 @@ contract ZTF is Ownable {
     function getCallbackPage(
         uint num,
         uint skip
-    ) public view returns (secondaryCallback[] memory) {
-        secondaryCallback[] memory result = new secondaryCallback[](num);
+    ) public view returns (SecondaryCallback[] memory) {
+        num = num > numCallback - skip ? numCallback - skip : num;
+        SecondaryCallback[] memory result = new SecondaryCallback[](num);
         for (uint i = 0; i < num; i++) {
             result[i] = secondaryCallbacks[i + skip];
         }
@@ -94,6 +96,7 @@ contract ZTF is Ownable {
         uint num,
         uint skip
     ) public view returns (Asset[] memory) {
+        num = num > numAsset - skip ? numAsset - skip : num;
         Asset[] memory result = new Asset[](num);
         for (uint i = 0; i < num; i++) {
             result[i] = assetList[i + skip];
@@ -106,9 +109,9 @@ contract ZTF is Ownable {
     }
 
     function _addNewAsset(address asset) internal {
-        uint id = numAsset + 1;
-        numAsset = id;
-        assetList[id] = Asset({asset: asset, totalBounty: 0, claimed: 0});
+        uint id = numAsset;
+        numAsset = id + 1;
+        assetList[id] = Asset({asset: asset, total: 0, claimed: 0});
         assetID[asset] = id;
     }
 
@@ -121,8 +124,8 @@ contract ZTF is Ownable {
         string memory title,
         bytes32 envHash
     ) external {
-        uint id = numBounty + 1;
-        numBounty = id;
+        uint id = numBounty;
+        numBounty = id + 1;
         bountyList[id] = Bounty({
             flag: flag,
             owner: msg.sender,
@@ -134,12 +137,11 @@ contract ZTF is Ownable {
             title: title,
             envHash: envHash
         });
-        numBounty += 1;
         require(
             assetList[assetID[asset]].asset != address(0),
             "Asset not exist"
         );
-        assetList[assetID[asset]].totalBounty += amount;
+        assetList[assetID[asset]].total += amount;
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
     }
 
@@ -150,7 +152,7 @@ contract ZTF is Ownable {
             "Bounty does not exist"
         );
         bountyList[bountyID].amount += amount;
-        assetList[assetID[bountyList[bountyID].asset]].totalBounty += amount;
+        assetList[assetID[bountyList[bountyID].asset]].total += amount;
         IERC20(bountyList[bountyID].asset).safeTransferFrom(
             msg.sender,
             address(this),
@@ -165,13 +167,13 @@ contract ZTF is Ownable {
         address asset,
         uint amount
     ) external {
-        uint id = numCallback + 1;
-        numCallback = id;
+        uint id = numCallback;
+        numCallback = id + 1;
         require(
             bountyList[targetBounty].owner != address(0),
             "Bounty does not exist"
         );
-        secondaryCallbacks[id] = secondaryCallback({
+        secondaryCallbacks[id] = SecondaryCallback({
             callback: callback,
             targetBounty: targetBounty,
             asset: asset,
@@ -185,7 +187,7 @@ contract ZTF is Ownable {
             "Asset not exist"
         );
 
-        assetList[assetID[asset]].totalBounty += amount;
+        assetList[assetID[asset]].total += amount;
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
     }
@@ -197,7 +199,7 @@ contract ZTF is Ownable {
         );
         secondaryCallbacks[callbackID].amount += amount;
         assetList[assetID[secondaryCallbacks[callbackID].asset]]
-            .totalBounty += amount;
+            .total += amount;
         IERC20(secondaryCallbacks[callbackID].asset).safeTransferFrom(
             msg.sender,
             address(this),

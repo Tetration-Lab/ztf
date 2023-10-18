@@ -26,7 +26,7 @@ contract ZTFTest is Test {
         );
     }
 
-    function test_buildJournal() public {
+    function testBuildJournal() public view {
         bytes memory x = ztf.buildJournal(
             0x388C818CA8B9251b393131C08a736A67ccB19297,
             0xf917aec90938d013706032901593abeaecdca22e77468aff7711eee087bad41b,
@@ -39,7 +39,7 @@ contract ZTFTest is Test {
         );
     }
 
-    function test_claim() public {
+    function testClaim() public {
         ztf.newBounty(
             address(0),
             address(0),
