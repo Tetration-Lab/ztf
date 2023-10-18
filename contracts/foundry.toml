@@ -7,3 +7,5 @@ libs = ["lib"]
 
 [rpc_endpoints]
 scroll = "${SCROLL_RPC_URL}"
+mantle = "${MANTLE_RPC_URL}"
+goerli = "${GOERLI_RPC_URL}"

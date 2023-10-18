@@ -18,7 +18,7 @@ contract ZTFScript is Script {
         );
 
         address[] memory assets = new address[](1);
-        assets[0] = 0x5300000000000000000000000000000000000004;
+        assets[0] = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111;
         ZTF ztf = new ZTF(
             0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
             address(verifier),
