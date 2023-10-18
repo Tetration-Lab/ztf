@@ -36,7 +36,7 @@ import _ from "lodash";
 import { useMemo, useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
-import { Address, Hex, decodeEventLog, parseUnits } from "viem";
+import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
 import {
   useChainId,
   useNetwork,
@@ -152,6 +152,7 @@ export const CreatePage = () => {
   const {
     register,
     formState: { errors, isDirty },
+    setError,
     handleSubmit,
     reset,
     watch,
@@ -180,6 +181,22 @@ export const CreatePage = () => {
     if (!isApproved) {
       try {
         setIsApproving(true);
+        const amount = await client.readContract({
+          address: data.currency,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [wallet?.account.address!],
+        });
+        if (amount < data.amount) {
+          setError("amount", {
+            type: "validate",
+            message: `Insufficient balance, found ${formatUnits(
+              amount,
+              getDecimal(data.currency)
+            )} but need ${data.amount}`,
+          });
+          return;
+        }
         const approval = await client.readContract({
           address: data.currency,
           abi: ERC20_ABI,

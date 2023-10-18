@@ -45,7 +45,7 @@ export const HomePage = () => {
   const chainId = useChainId();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
-  const { getPrice } = usePrices();
+  const { getPrice, usd } = usePrices();
 
   const { data, isLoading: isLoadingStats } = useContractReads({
     contracts: [
@@ -77,7 +77,9 @@ export const HomePage = () => {
       claimed += Number(formatUnits(a.claimed, decimal)) * price;
     });
     return [total, claimed] as const;
-  }, [data?.[2]?.result, getPrice]);
+  }, [data?.[2], usd]);
+
+  console.log(bountyPrize);
 
   const PAGE_SIZE = 10n;
   const [page, setPage] = useState(0);
