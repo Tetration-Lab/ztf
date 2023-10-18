@@ -32,10 +32,8 @@ contract ZTF {
 
     struct ZClaim {
         address claimer;
-        address flag;
         bytes32 txs_hash;
         bytes32 postStateDigest;
-        bytes journal;
         bytes seal;
     }
 
@@ -204,17 +202,17 @@ contract ZTF {
                 claimData.seal,
                 IMG_ID,
                 claimData.postStateDigest,
-                claimData.journal
+                buildJournal(
+                    claimData.claimer,
+                    claimData.txs_hash,
+                    bountyList[bountyID].envHash
+                )
             ),
             "Invalid seal"
         );
         require(
             bountyList[bountyID].claimed == false,
             "Bounty already claimed"
-        );
-        require(
-            bountyList[bountyID].flag == claimData.flag,
-            "Flag does not match"
         );
 
         // update
@@ -234,6 +232,25 @@ contract ZTF {
         assetList[assetID[bountyList[bountyID].asset]].claimed += bountyList[
             bountyID
         ].amount;
+    }
+
+    function buildJournal(
+        address claimer,
+        bytes32 txHash,
+        bytes32 envHash
+    ) public pure returns (bytes memory) {
+        bytes memory ret = new bytes(336);
+        uint idx = 0;
+        bytes memory c = abi.encodePacked(claimer, txHash, envHash);
+        for (uint i = 0; i < c.length; i++) {
+            ret[idx] = c[i];
+            idx += 1;
+            ret[idx] = 0;
+            ret[idx + 1] = 0;
+            ret[idx + 2] = 0;
+            idx += 3;
+        }
+        return ret;
     }
 
     // trigger list of secondary callbacks if bounty is claimed
