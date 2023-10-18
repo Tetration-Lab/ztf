@@ -17,6 +17,7 @@ struct Bounty {
     uint lastUpdated;
     bytes32 envHash;
     string title;
+    string ipfsHash; // ipfs hash of the bounty
 }
 
 struct SecondaryCallback {
@@ -122,6 +123,7 @@ contract ZTF is Ownable {
         address asset,
         uint amount,
         string memory title,
+        string memory ipfsHash,
         bytes32 envHash
     ) external {
         uint id = numBounty;
@@ -135,6 +137,7 @@ contract ZTF is Ownable {
             claimed: false,
             lastUpdated: block.timestamp,
             title: title,
+            ipfsHash: ipfsHash,
             envHash: envHash
         });
         require(

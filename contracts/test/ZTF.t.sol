@@ -46,6 +46,7 @@ contract ZTFTest is Test {
             address(token),
             0,
             "test",
+            "test",
             0x0df1f020d5b509230c97e83dd5ee529b2f1115e13c68de2a241262abd47c820f
         );
         vm.expectRevert("Invalid PoV");
