@@ -102,10 +102,7 @@ contract ZTF is Ownable {
     }
 
     function addNewAsset(address asset) external onlyOwner {
-        uint id = numAsset + 1;
-        numAsset = id;
-        assetList[id] = Asset({asset: asset, totalBounty: 0, claimed: 0});
-        assetID[asset] = id;
+        _addNewAsset(asset);
     }
 
     function _addNewAsset(address asset) internal {
@@ -138,9 +135,10 @@ contract ZTF is Ownable {
             envHash: envHash
         });
         numBounty += 1;
-        if (assetID[asset] == 0) {
-            _addNewAsset(asset);
-        }
+        require(
+            assetList[assetID[asset]].asset != address(0),
+            "Asset not exist"
+        );
         assetList[assetID[asset]].totalBounty += amount;
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
     }
