@@ -57,6 +57,9 @@ contract ZTF is Ownable {
     mapping(uint => Asset) public assetList;
     mapping(address => uint) public assetID;
 
+    event NewBounty(uint indexed bountyID, address indexed owner);
+    event BountyClaimed(uint indexed bountyID, address indexed claimer);
+
     constructor(
         bytes32 preStateDigest,
         address verifier,
@@ -146,6 +149,8 @@ contract ZTF is Ownable {
         );
         assetList[assetID[asset]].total += amount;
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit NewBounty(id, msg.sender);
     }
 
     // add bounty to an existing bounty
@@ -154,7 +159,13 @@ contract ZTF is Ownable {
             bountyList[bountyID].owner != address(0),
             "Bounty does not exist"
         );
+        require(amount > 0, "Amount must be greater than 0");
+        require(
+            bountyList[bountyID].claimed == false,
+            "Bounty already claimed"
+        );
         bountyList[bountyID].amount += amount;
+        bountyList[bountyID].lastUpdated = block.timestamp;
         assetList[assetID[bountyList[bountyID].asset]].total += amount;
         IERC20(bountyList[bountyID].asset).safeTransferFrom(
             msg.sender,
@@ -226,10 +237,7 @@ contract ZTF is Ownable {
             ),
             "Invalid PoV"
         );
-        require(
-            bountyList[bountyID].claimed == false,
-            "Bounty already claimed"
-        );
+        require(!bountyList[bountyID].claimed, "Bounty already claimed");
 
         // update
         bountyList[bountyID].claimed = true;
@@ -243,7 +251,7 @@ contract ZTF is Ownable {
 
         // pay
         IERC20(bountyList[bountyID].asset).safeTransfer(
-            msg.sender,
+            claimData.claimer,
             bountyList[bountyID].amount
         );
 
@@ -251,6 +259,8 @@ contract ZTF is Ownable {
         assetList[assetID[bountyList[bountyID].asset]].claimed += bountyList[
             bountyID
         ].amount;
+
+        emit BountyClaimed(bountyID, claimData.claimer);
     }
 
     function buildJournal(
