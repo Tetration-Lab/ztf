@@ -7,41 +7,41 @@ import "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/token/ERC20/IERC20.sol";
 import "@openzeppelin/access/Ownable.sol";
 
+struct Bounty {
+    address flag; // will be forwarded to callback. in case of sandbox mode this can be any address
+    address owner;
+    address callback;
+    address asset;
+    uint amount;
+    bool claimed;
+    uint lastUpdated;
+    bytes32 envHash;
+    string title;
+}
+
+struct secondaryCallback {
+    address callback;
+    uint targetBounty;
+    address asset;
+    uint amount;
+    bool claimed;
+}
+
+struct ZClaim {
+    address claimer;
+    bytes32 txs_hash;
+    bytes32 postStateDigest;
+    bytes seal;
+}
+
+struct Asset {
+    address asset;
+    uint totalBounty;
+    uint claimed;
+}
+
 contract ZTF is Ownable {
     using SafeERC20 for IERC20;
-
-    struct Bounty {
-        address flag;
-        address owner;
-        address callback;
-        address asset;
-        uint amount;
-        bool claimed;
-        uint lastUpdated;
-        bytes32 envHash;
-        string title;
-    }
-
-    struct secondaryCallback {
-        address callback;
-        uint targetBounty;
-        address asset;
-        uint amount;
-        bool claimed;
-    }
-
-    struct ZClaim {
-        address claimer;
-        bytes32 txs_hash;
-        bytes32 postStateDigest;
-        bytes seal;
-    }
-
-    struct Asset {
-        address asset;
-        uint totalBounty;
-        uint claimed;
-    }
 
     bytes32 public PRE_STATE_DIGEST;
     IRiscZeroVerifier public RISC_ZERO_VERIFIER;
@@ -219,7 +219,7 @@ contract ZTF is Ownable {
                     bountyList[bountyID].envHash
                 )
             ),
-            "Invalid seal"
+            "Invalid PoV"
         );
         require(
             bountyList[bountyID].claimed == false,
