@@ -3,7 +3,7 @@ use std::{env, error::Error, str::FromStr, time::Duration};
 use bonsai_sdk::alpha::Client;
 use dotenvy::dotenv;
 use ethers_core::types::Address;
-use lib::secrets::totally_not_a_backdoor;
+use lib::{secrets::totally_not_a_backdoor, utils::snark::g16_seal_to_token_bytes};
 use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 res.status,
                 res.state.unwrap_or_default()
             );
-            std::thread::sleep(Duration::from_secs(10));
+            std::thread::sleep(Duration::from_secs(15));
             continue;
         }
         if res.status == "SUCCEEDED" {
@@ -68,6 +68,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let metadata = receipt.get_metadata()?;
 
     println!("Receipt: {}", journal);
+    println!("Env Hash: 0x{}", hex::encode(journal.enviroment_hash));
+    println!("Txs Hash: 0x{}", hex::encode(journal.txs_hash));
     println!("Metadata: {:?}", metadata);
     println!("Pre state digest: {}", metadata.pre.digest());
 
@@ -78,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         match res.status.as_str() {
             "RUNNING" => {
                 println!("Current status: {} - continue polling...", res.status);
-                std::thread::sleep(Duration::from_secs(15));
+                std::thread::sleep(Duration::from_secs(20));
                 continue;
             }
             "SUCCEEDED" => {
@@ -98,7 +100,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     };
-    println!("Snark receipt: {:?}", snark_receipt);
+    let seal_bytes = g16_seal_to_token_bytes(&snark_receipt.snark)?;
+    println!(
+        "Seal bytes: 0x{}",
+        hex::encode(seal_bytes.into_bytes().unwrap())
+    );
+    println!(
+        "Post state digest: 0x{}",
+        hex::encode(snark_receipt.post_state_digest)
+    );
 
     Ok(())
 }
