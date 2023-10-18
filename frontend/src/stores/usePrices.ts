@@ -24,6 +24,7 @@ export const usePrices = create<IPricesStore & IPricesStoreAction>(
     getPrice: (denom: string) => {
       const d = denom.toUpperCase();
       if (d === "SDAI") return 1.04;
+      if (d === "WETH") return get().getPrice("ETH");
       const price = get().usd[d];
       return price ? 1 / price : 0;
     },

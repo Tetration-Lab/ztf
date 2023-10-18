@@ -2,7 +2,7 @@ import { Address, parseAbi } from "viem";
 import { goerli } from "viem/chains";
 
 export const CONTRACTS: { [chainId: number]: Address } = {
-  [goerli.id]: "0x797e451d2e6782565db4481cf4a68c818894eeba",
+  [goerli.id]: "0x45937CD64dCf8F0318100E16243177c9a6F6c6Bb",
 };
 
 export const getZTFContract = (chainId: number): Address => {
@@ -11,10 +11,18 @@ export const getZTFContract = (chainId: number): Address => {
 
 export const ZTF_ABI = parseAbi([
   "struct Asset { address asset; uint total; uint claimed; }",
-  "struct Bounty { address flag; address owner; address callback; address asset; uint amount; bool claimed; uint lastUpdated; bytes32 envHash; string title; }",
+  "struct Bounty { address flag; address owner; address callback; address asset; uint amount; bool claimed; uint lastUpdated; bytes32 envHash; string title; string ipfsHash; }",
   "function numBounty() view returns (uint256)",
   "function numClaimed() view returns (uint256)",
   "function getAssetStatPage(uint num, uint skip) view returns (Asset[] memory)",
-  "function newBounty(address flag, address callback, address asset, uint amount, string memory title, bytes32 envHash)",
+  "function newBounty(address flag, address callback, address asset, uint amount, string memory title, string memory ipfsHash, bytes32 envHash)",
   "function getBountyPage(uint num, uint skip) view returns (Bounty[] memory)",
+  "event NewBounty(uint indexed bountyID, address indexed owner)",
+  "event BountyClaimed(uint indexed bountyID, address indexed claimer)",
+]);
+
+export const ERC20_ABI = parseAbi([
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address, uint256) returns (bool)",
+  "function allowance(address, address) view returns (uint256)",
 ]);

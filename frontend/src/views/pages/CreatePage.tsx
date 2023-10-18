@@ -1,7 +1,14 @@
 import { InfoSection } from "@/components/Section/InfoSection";
 import { AppHeader, Navbar, Section } from "@/components/common";
 import { ONEDARK_COLOR_PROPS } from "@/constants/colors";
-import { getZTFContract } from "@/constants/contracts";
+import { ERC20_ABI, ZTF_ABI, getZTFContract } from "@/constants/contracts";
+import {
+  CURRENCY_BY_CHAIN_ID,
+  ZERO_ADDRESS,
+  ZERO_BYTES32,
+  getDecimal,
+  getDenom,
+} from "@/constants/currency";
 import { ENV_FLAG_INFO } from "@/constants/texts";
 import { highlight } from "@/utils/json";
 import {
@@ -14,16 +21,30 @@ import {
   Input,
   InputProps,
   Link,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  Select,
   Stack,
   Text,
   chakra,
+  useDisclosure,
 } from "@chakra-ui/react";
 import _ from "lodash";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
-import { Address } from "viem";
-import { useChainId, useNetwork } from "wagmi";
+import { Address, Hex, decodeEventLog, parseUnits } from "viem";
+import {
+  useChainId,
+  useContractWrite,
+  useNetwork,
+  usePrepareContractWrite,
+  usePublicClient,
+} from "wagmi";
+import { default as NextLink } from "next/link";
 
 const SetupDetails = () => {
   return (
@@ -124,11 +145,13 @@ const InputField = ({
   description,
   inputProps,
   error,
+  customInput,
 }: {
   title: string;
   description: string;
-  inputProps: InputProps;
+  inputProps?: InputProps;
   error?: FieldError;
+  customInput?: React.ReactNode;
 }) => {
   return (
     <Stack spacing={2}>
@@ -147,7 +170,7 @@ const InputField = ({
         </Stack>
 
         <Stack w="full">
-          <Input {...inputProps} isInvalid={!!error} />
+          {customInput ?? <Input {...inputProps} isInvalid={!!error} />}
           {error && (
             <Text
               as="b"
@@ -182,27 +205,115 @@ export const CreatePage = () => {
     formState: { errors, isDirty },
     handleSubmit,
     reset,
+    watch,
   } = useForm<BountyInfo>();
 
   const [isApproved, setIsApproved] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const onSubmit = (data: BountyInfo) => {
+  const { chain } = useNetwork();
+  const chainId = useChainId();
+  const client = usePublicClient();
+  const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
+
+  const availableTokens = CURRENCY_BY_CHAIN_ID[chainId] ?? [];
+
+  const amount = useMemo(() => {
+    const amount = watch("amount");
+    return isNaN(amount)
+      ? 0n
+      : parseUnits(_.toString(watch("amount")), getDecimal(watch("currency")));
+  }, [watch("amount"), watch("currency")]);
+
+  const { config: approveConfig } = usePrepareContractWrite({
+    address: watch("currency"),
+    abi: ERC20_ABI,
+    functionName: "approve",
+    args: [contract.address, amount],
+  });
+  const { writeAsync: callApprove } = useContractWrite(approveConfig);
+
+  const { config: createConfig } = usePrepareContractWrite({
+    ...contract,
+    functionName: "newBounty",
+    args: [
+      ZERO_ADDRESS,
+      ZERO_ADDRESS,
+      watch("currency", ZERO_ADDRESS),
+      amount,
+      watch("title"),
+      watch("ipfsHash"),
+      watch("envHash", ZERO_BYTES32) as Hex,
+    ],
+  });
+  const { writeAsync: callCreate } = useContractWrite(createConfig);
+
+  const onSubmit = async (_data: BountyInfo) => {
     if (!isApproved) {
-      console.log("Approving...", data);
+      try {
+        setIsApproving(true);
+        const result = await callApprove?.();
+        if (!result?.hash) return;
+        const tx = await client.waitForTransactionReceipt({
+          hash: result?.hash,
+        });
+        if (tx.status === "success") setIsApproved(true);
+      } finally {
+        setIsApproving(false);
+      }
     } else {
-      console.log("Creating...", data);
+      try {
+        setIsCreating(true);
+        const result = await callCreate?.();
+        if (!result?.hash) return;
+        const tx = await client.waitForTransactionReceipt({
+          hash: result?.hash,
+        });
+        if (tx.status === "success" && tx.logs.length > 0) {
+          const {
+            args: { bountyID },
+          } = decodeEventLog({
+            abi: ZTF_ABI,
+            eventName: "NewBounty",
+            ...tx.logs[tx.logs.length - 1],
+          });
+          setBountyId(Number(bountyID));
+          onOpen();
+          reset();
+          setIsApproved(false);
+        }
+      } finally {
+        setIsCreating(false);
+      }
     }
   };
 
-  const { chain } = useNetwork();
-  const chainId = useChainId();
-  const contract = getZTFContract(chainId);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [bountyId, setBountyId] = useState(0);
 
   return (
     <>
       <AppHeader title="Create Bounty" />
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Bounty Created!</ModalHeader>
+          <ModalBody>
+            <Stack spacing={4}>
+              <Text>Bounty created at id {bountyId}</Text>
+              <Button
+                w="full"
+                as={NextLink}
+                href={`/bounty/${bountyId}`}
+                onClick={onClose}
+              >
+                Go To Bounty Page
+              </Button>
+            </Stack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       <Section>
         <Navbar />
         <Stack spacing={4}>
@@ -214,9 +325,9 @@ export const CreatePage = () => {
               fontFamily="Fira Code"
               as={Link}
               isExternal
-              href={`${chain?.blockExplorers?.default.url}/address/${contract}`}
+              href={`${chain?.blockExplorers?.default.url}/address/${contract.address}`}
             >
-              {contract}
+              {contract.address}
             </chakra.span>
           </Text>
           <SetupDetails />
@@ -281,15 +392,23 @@ export const CreatePage = () => {
               <InputField
                 title="Currency"
                 description="The currency to be used in the bounty. Must be a valid ERC20 token address. Must starts with `0x...`"
-                inputProps={{
-                  ...register("currency", {
-                    required: true,
-                    validate: (v) =>
-                      /0x[0-9a-fA-F]{20}/g.test(v) ? true : "Invalid address",
-                  }),
-                  placeholder: "0x628ebc64a38269e031afbdd3c5ba857483b5d048",
-                  maxLength: 22,
-                }}
+                customInput={
+                  <Select
+                    {...register("currency", {
+                      required: true,
+                      validate: (v) =>
+                        /0x[0-9a-fA-F]{20}/g.test(v) ? true : "Invalid address",
+                    })}
+                    placeholder="Select currency"
+                    isInvalid={!!errors.currency}
+                  >
+                    {availableTokens.map((token) => (
+                      <option key={token} value={token}>
+                        {getDenom(token)} ({token})
+                      </option>
+                    ))}
+                  </Select>
+                }
                 error={errors.currency}
               />
               <InputField
@@ -298,9 +417,10 @@ export const CreatePage = () => {
                 inputProps={{
                   ...register("amount", {
                     required: true,
+                    setValueAs: (v) => parseFloat(v),
+                    validate: (v) => !isNaN(Number(v)) || "Invalid amount",
                   }),
                   placeholder: "12501.9",
-                  type: "number",
                 }}
                 error={errors.amount}
               />

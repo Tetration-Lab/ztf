@@ -31,6 +31,7 @@ import { chains, web3Modal } from "@/constants/web3";
 import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import { usePrices } from "@/stores/usePrices";
 import { getDecimal, getDenom } from "@/constants/currency";
+import { formatUnits } from "viem";
 
 export const HomePage = () => {
   const {
@@ -76,8 +77,8 @@ export const HomePage = () => {
       const denom = getDenom(a.asset);
       const decimal = getDecimal(a.asset);
       const price = getPrice(denom);
-      total += (Number(a.total) * price) / 10 ** decimal;
-      claimed += (Number(a.claimed) * price) / 10 ** decimal;
+      total += Number(formatUnits(a.total, decimal)) * price;
+      claimed += Number(formatUnits(a.claimed, decimal)) * price;
     });
     return [total, claimed] as const;
   }, [data?.[2]?.result, getPrice]);
