@@ -10,7 +10,9 @@ contract JustADAO {
 
     function withdraw() public {
         // interaction
-        payable(msg.sender).transfer(balances[msg.sender]);
+        (bool sent, ) = msg.sender.call{value: balances[msg.sender]}("");
+        require(sent, "Failed to send Ether");
+
         // effect
         balances[msg.sender] = 0;
         // checks ?
