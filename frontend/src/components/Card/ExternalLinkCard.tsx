@@ -15,17 +15,13 @@ import {
   FaGithub,
   FaTwitter,
 } from "react-icons/fa";
+import { FaFont } from "react-icons/fa6";
 
-const selectIconByUrl = (url: string) => {
-  if (url.includes("github")) {
-    return FaGithub;
-  }
-  if (url.includes("twitter")) {
-    return FaTwitter;
-  }
-  if (url.includes("etherscan") || url.includes("ethereum")) {
-    return FaEthereum;
-  }
+const selectIconByUrl = (url?: string) => {
+  if (!url) return FaFont;
+  if (url.includes("github")) return FaGithub;
+  if (url.includes("twitter")) return FaTwitter;
+  if (url.includes("etherscan") || url.includes("ethereum")) return FaEthereum;
   return FaFile;
 };
 export const ExternalLinkCard = ({
@@ -35,7 +31,7 @@ export const ExternalLinkCard = ({
 }: {
   title: string;
   description?: string;
-  url: string;
+  url?: string;
 }) => {
   const icon = useMemo(() => selectIconByUrl(url), [url]);
   return (
@@ -52,13 +48,15 @@ export const ExternalLinkCard = ({
             </Text>
           )}
         </Stack>
-        <IconButton
-          icon={<Icon as={FaChevronUp} transform="rotate(45deg)" />}
-          as={Link}
-          aria-label="Go"
-          href={url}
-          isExternal
-        />
+        {url && (
+          <IconButton
+            icon={<Icon as={FaChevronUp} transform="rotate(45deg)" />}
+            as={Link}
+            aria-label="Go"
+            href={url}
+            isExternal
+          />
+        )}
       </HStack>
     </Card>
   );

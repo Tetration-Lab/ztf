@@ -9,13 +9,13 @@ import {
   Link,
   Image,
   Button,
+  Skeleton,
 } from "@chakra-ui/react";
 import { Section, Navbar, Footer, AppHeader } from "@/components/common";
 import { ValueCard } from "@/components/Card/ValueCard";
-import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { BountyCard } from "@/components/Card/BountyCard";
-import { useEffect, useMemo, useState } from "react";
-import { Bounty } from "@/interfaces/bounty";
+import { useMemo, useState } from "react";
+import { bountyFromContractData } from "@/interfaces/bounty";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -24,6 +24,7 @@ import {
 import {
   useAccount,
   useChainId,
+  useContractRead,
   useContractReads,
   useSwitchNetwork,
 } from "wagmi";
@@ -32,6 +33,7 @@ import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import { usePrices } from "@/stores/usePrices";
 import { getDecimal, getDenom } from "@/constants/currency";
 import { formatUnits } from "viem";
+import _ from "lodash";
 
 export const HomePage = () => {
   const {
@@ -44,12 +46,6 @@ export const HomePage = () => {
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
   const { getPrice } = usePrices();
-
-  const PAGE_SIZE = 10;
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [isExhausted, setIsExhausted] = useState(false);
-  const [bounties, setBounties] = useState<Bounty[]>([]);
 
   const { data, isLoading: isLoadingStats } = useContractReads({
     contracts: [
@@ -83,25 +79,17 @@ export const HomePage = () => {
     return [total, claimed] as const;
   }, [data?.[2]?.result, getPrice]);
 
-  useEffect(() => {
-    const load = async () => {
-      if (isLoading) return;
-      setIsLoading(true);
-      const currentBounty = MOCK_BOUNTIES.slice(
-        (page - 1) * PAGE_SIZE,
-        page * PAGE_SIZE
-      );
-      if (currentBounty.length === 0) {
-        setIsExhausted(true);
-        setPage((p) => p - 1);
-      } else {
-        setBounties(currentBounty);
-      }
-      setIsLoading(false);
-    };
-
-    load();
-  }, [page]);
+  const PAGE_SIZE = 10n;
+  const [page, setPage] = useState(0);
+  const {
+    data: bounties,
+    isLoading,
+    isError,
+  } = useContractRead({
+    ...contract,
+    functionName: "getBountyPage",
+    args: [PAGE_SIZE, BigInt(page) * PAGE_SIZE],
+  });
 
   return (
     <>
@@ -130,6 +118,7 @@ export const HomePage = () => {
                   gap={2}
                   isLoading={isSwitching && pendingChainId === c.id}
                   isActive={isConnected && chainId === c.id}
+                  cursor={chainId === c.id ? "default" : "pointer"}
                   onClick={
                     isSwitching || chainId === c.id
                       ? undefined
@@ -176,21 +165,26 @@ export const HomePage = () => {
               <IconButton
                 icon={<ChevronLeftIcon />}
                 aria-label="back"
-                isDisabled={page == 1}
+                isDisabled={page === 0}
                 onClick={() => setPage((p) => p - 1)}
               />
               <IconButton
                 icon={<ChevronRightIcon />}
                 aria-label="next"
-                isDisabled={isExhausted}
+                isDisabled={isError}
                 onClick={() => setPage((p) => p + 1)}
               />
             </HStack>
           </HStack>
           <Wrap py={2}>
-            {bounties.map((b, i) => (
-              <BountyCard key={i} {...b} />
-            ))}
+            {isLoading
+              ? _.range(10).map((i) => <Skeleton key={i} w="2xs" h="xs" />)
+              : bounties?.map((b, i) => (
+                  <BountyCard
+                    key={i}
+                    {...bountyFromContractData({ index: i, ...b })}
+                  />
+                ))}
           </Wrap>
         </Stack>
         <Footer />

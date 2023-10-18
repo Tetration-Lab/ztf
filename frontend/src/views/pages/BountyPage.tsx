@@ -2,9 +2,10 @@ import { EnvironmentCard } from "@/components/Card/EnvironmentCard";
 import { EnvironmentFlagCard } from "@/components/Card/EnvironmentFlagCard";
 import { ExternalLinkCard } from "@/components/Card/ExternalLinkCard";
 import { AppHeader, Navbar, Section } from "@/components/common";
+import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import { getDenom } from "@/constants/currency";
-import { MOCK_BOUNTIES } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
+import { bountyFromContractData } from "@/interfaces/bounty";
 import { usePrices } from "@/stores/usePrices";
 import { formatAddress } from "@/utils/address";
 import { fetchBountyDetailIpfs } from "@/utils/ipfs";
@@ -25,8 +26,9 @@ import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { useRouter } from "next/router";
 import numbro from "numbro";
+import { useMemo } from "react";
 import { FaChevronDown } from "react-icons/fa";
-import { useChainId } from "wagmi";
+import { useChainId, useContractRead } from "wagmi";
 
 export const BountyPage = () => {
   const {
@@ -35,53 +37,60 @@ export const BountyPage = () => {
   const { getPrice } = usePrices();
   const envFlagDisclosure = useDisclosure({ defaultIsOpen: true });
 
-  const bounty = useQuery({
-    queryKey: ["bounty", id],
-    queryFn: async () => {
-      return MOCK_BOUNTIES.find((b) => b.id === id) || null;
-    },
+  const chainId = useChainId();
+  const { data, isLoading } = useContractRead({
+    address: getZTFContract(chainId),
+    abi: ZTF_ABI,
+    functionName: "bountyList",
+    args: [BigInt(Number(id) || 0)],
   });
+  const bounty = useMemo(
+    () =>
+      data
+        ? bountyFromContractData({ index: Number(id) || 0, ...data })
+        : undefined,
+    [data]
+  );
 
   const detail = useQuery({
-    queryKey: ["bountyDetail", bounty.data?.ipfsHash],
+    queryKey: ["bountyDetail", bounty?.ipfsHash],
     queryFn: async () => {
-      if (!bounty.data?.ipfsHash) return null;
-      return await fetchBountyDetailIpfs(bounty.data?.ipfsHash);
+      if (!bounty?.ipfsHash) return null;
+      return await fetchBountyDetailIpfs(bounty?.ipfsHash);
     },
   });
 
   return (
     <>
-      <AppHeader title={`Bounty ${bounty.data?.title}`} />
+      <AppHeader title={`Bounty ${bounty?.title}`} />
       <Section>
         <Navbar />
         <Stack spacing={2}>
-          <Skeleton isLoaded={!!bounty.data && !bounty.isLoading}>
+          <Skeleton isLoaded={!!bounty && !isLoading}>
             <HStack justify="space-between" spacing={{ base: 2, md: 10 }}>
               <Stack spacing={0}>
-                <Heading maxW="3xl">Bounty {bounty.data?.title}</Heading>
+                <Heading maxW="3xl">Bounty {bounty?.title}</Heading>
                 <Badge
                   w="fit-content"
-                  colorScheme={bounty.data?.isClaimed ? "red" : "green"}
+                  colorScheme={bounty?.isClaimed ? "red" : "green"}
                   fontSize="xl"
                 >
-                  {bounty.data?.isClaimed ? "Claimed" : "Available"}
+                  {bounty?.isClaimed ? "Claimed" : "Available"}
                 </Badge>
               </Stack>
               <Stack align="end" spacing={0}>
                 <Heading>
-                  {numbro(bounty.data?.amount!).format({
+                  {numbro(bounty?.amount!).format({
                     average: true,
                     mantissa: 2,
                     trimMantissa: true,
                   })}
-                  {getDenom(bounty.data?.currency!)}
+                  {getDenom(bounty?.currency!)}
                 </Heading>
                 <Text fontSize="xl" color="gray.300">
                   ~$
                   {numbro(
-                    bounty.data?.amount! *
-                      getPrice(getDenom(bounty.data?.currency!))
+                    bounty?.amount! * getPrice(getDenom(bounty?.currency!))
                   ).format({
                     average: true,
                     mantissa: 2,
@@ -91,20 +100,16 @@ export const BountyPage = () => {
               </Stack>
             </HStack>
           </Skeleton>
-          <Skeleton
-            isLoaded={!!bounty.data && !bounty.isLoading}
-            as={Stack}
-            spacing={0}
-          >
-            <Text>ID: {bounty.data?.id}</Text>
+          <Skeleton isLoaded={!!bounty && !isLoading} as={Stack} spacing={0}>
+            <Text>ID: {bounty?.id}</Text>
             <Text display={{ base: "none", md: "block" }}>
-              Owner: {bounty.data?.owner.toLowerCase()}
+              Owner: {bounty?.owner.toLowerCase()}
             </Text>
             <Text display={{ base: "block", md: "none" }}>
-              Owner: {formatAddress(bounty.data?.owner.toLowerCase()!)}
+              Owner: {formatAddress(bounty?.owner.toLowerCase()!)}
             </Text>
             <Text>
-              Last Updated: {bounty.data?.lastUpdated.toLocaleDateString()}
+              Last Updated: {bounty?.lastUpdated.toLocaleDateString()}
             </Text>
           </Skeleton>
           <Heading fontSize="2xl">Related Links</Heading>

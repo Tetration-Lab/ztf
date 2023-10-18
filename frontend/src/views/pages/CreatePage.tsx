@@ -39,10 +39,9 @@ import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex, decodeEventLog, parseUnits } from "viem";
 import {
   useChainId,
-  useContractWrite,
   useNetwork,
-  usePrepareContractWrite,
   usePublicClient,
+  useWalletClient,
 } from "wagmi";
 import { default as NextLink } from "next/link";
 
@@ -215,6 +214,7 @@ export const CreatePage = () => {
   const { chain } = useNetwork();
   const chainId = useChainId();
   const client = usePublicClient();
+  const { data: wallet } = useWalletClient();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
   const availableTokens = CURRENCY_BY_CHAIN_ID[chainId] ?? [];
@@ -226,37 +226,30 @@ export const CreatePage = () => {
       : parseUnits(_.toString(watch("amount")), getDecimal(watch("currency")));
   }, [watch("amount"), watch("currency")]);
 
-  const { config: approveConfig } = usePrepareContractWrite({
-    address: watch("currency"),
-    abi: ERC20_ABI,
-    functionName: "approve",
-    args: [contract.address, amount],
-  });
-  const { writeAsync: callApprove } = useContractWrite(approveConfig);
-
-  const { config: createConfig } = usePrepareContractWrite({
-    ...contract,
-    functionName: "newBounty",
-    args: [
-      ZERO_ADDRESS,
-      ZERO_ADDRESS,
-      watch("currency", ZERO_ADDRESS),
-      amount,
-      watch("title"),
-      watch("ipfsHash"),
-      watch("envHash", ZERO_BYTES32) as Hex,
-    ],
-  });
-  const { writeAsync: callCreate } = useContractWrite(createConfig);
-
-  const onSubmit = async (_data: BountyInfo) => {
+  const onSubmit = async (data: BountyInfo) => {
     if (!isApproved) {
       try {
         setIsApproving(true);
-        const result = await callApprove?.();
-        if (!result?.hash) return;
+        const approval = await client.readContract({
+          address: data.currency,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [wallet?.account.address!, contract.address],
+        });
+        if (approval >= amount) {
+          setIsApproved(true);
+          return;
+        }
+        const { request } = await client.simulateContract({
+          address: data.currency,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [contract.address, amount],
+        });
+        const hash = await wallet?.writeContract(request);
+        if (!hash) return;
         const tx = await client.waitForTransactionReceipt({
-          hash: result?.hash,
+          hash,
         });
         if (tx.status === "success") setIsApproved(true);
       } finally {
@@ -265,10 +258,24 @@ export const CreatePage = () => {
     } else {
       try {
         setIsCreating(true);
-        const result = await callCreate?.();
-        if (!result?.hash) return;
+        const { request } = await client.simulateContract({
+          ...contract,
+          account: wallet?.account.address,
+          functionName: "newBounty",
+          args: [
+            ZERO_ADDRESS,
+            ZERO_ADDRESS,
+            watch("currency", ZERO_ADDRESS),
+            amount,
+            watch("title"),
+            watch("ipfsHash"),
+            watch("envHash", ZERO_BYTES32) as Hex,
+          ],
+        });
+        const hash = await wallet?.writeContract(request);
+        if (!hash) return;
         const tx = await client.waitForTransactionReceipt({
-          hash: result?.hash,
+          hash,
         });
         if (tx.status === "success" && tx.logs.length > 0) {
           const {
@@ -431,14 +438,14 @@ export const CreatePage = () => {
               direction={{ base: "column", md: "row" }}
             >
               <Button
-                isDisabled={isApproved}
+                isDisabled={isApproved || !wallet}
                 isLoading={isApproving}
                 type="submit"
               >
                 Approve Bounty Payment
               </Button>
               <Button
-                isDisabled={!isApproved}
+                isDisabled={!isApproved || !wallet}
                 isLoading={isCreating}
                 type="submit"
               >

@@ -26,6 +26,7 @@ export const BountyCard = ({
       maxW="2xs"
       textAlign="end"
       spacing={0}
+      h="fit-content"
     >
       <Text as="b" fontSize="lg" noOfLines={2}>
         {title}

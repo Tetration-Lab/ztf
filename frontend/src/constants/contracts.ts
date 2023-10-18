@@ -15,8 +15,9 @@ export const ZTF_ABI = parseAbi([
   "function numBounty() view returns (uint256)",
   "function numClaimed() view returns (uint256)",
   "function getAssetStatPage(uint num, uint skip) view returns (Asset[] memory)",
-  "function newBounty(address flag, address callback, address asset, uint amount, string memory title, string memory ipfsHash, bytes32 envHash)",
+  "function newBounty(address flag, address callback, address asset, uint256 amount, string memory title, string memory ipfsHash, bytes32 envHash)",
   "function getBountyPage(uint num, uint skip) view returns (Bounty[] memory)",
+  "function bountyList(uint bountyID) view returns (Bounty memory)",
   "event NewBounty(uint indexed bountyID, address indexed owner)",
   "event BountyClaimed(uint indexed bountyID, address indexed claimer)",
 ]);
