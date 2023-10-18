@@ -14,21 +14,14 @@ import {
   ModalHeader,
   ModalOverlay,
   Stack,
-  Text,
   useDisclosure,
 } from "@chakra-ui/react";
 import _ from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex } from "viem";
-import {
-  useChainId,
-  useContractRead,
-  usePublicClient,
-  useWalletClient,
-} from "wagmi";
-import { bountyFromContractData } from "@/interfaces/bounty";
+import { useChainId, usePublicClient, useWalletClient } from "wagmi";
 import { InputField } from "@/components/Input/InputField";
 
 const SetupDetails = () => {
@@ -107,7 +100,6 @@ export const ClaimPage = () => {
     formState: { errors, isDirty },
     handleSubmit,
     reset,
-    watch,
   } = useForm<BountyClaimInfo>();
   const chainId = useChainId();
   const client = usePublicClient();

@@ -5,7 +5,6 @@ import { ERC20_ABI, ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import {
   CURRENCY_BY_CHAIN_ID,
   ZERO_ADDRESS,
-  ZERO_BYTES32,
   getDecimal,
   getDenom,
 } from "@/constants/currency";
@@ -18,8 +17,6 @@ import {
   Heading,
   Icon,
   IconButton,
-  Input,
-  InputProps,
   Link,
   Modal,
   ModalBody,
@@ -34,7 +31,7 @@ import {
 } from "@chakra-ui/react";
 import _ from "lodash";
 import { useMemo, useState } from "react";
-import { FieldError, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
 import {
@@ -275,7 +272,7 @@ export const CreatePage = () => {
           <ModalHeader>Bounty Created!</ModalHeader>
           <ModalBody>
             <Stack spacing={4}>
-              <Text>Bounty created at id {bountyId}</Text>
+              <Text>Bounty created at id {bountyId}.</Text>
               <Button
                 w="full"
                 as={NextLink}

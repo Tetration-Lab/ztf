@@ -62,14 +62,14 @@ export const BountyPage = () => {
 
   return (
     <>
-      <AppHeader title={`Bounty ${bounty?.title}`} />
+      <AppHeader title={`Bounty: ${bounty?.title}`} />
       <Section>
         <Navbar />
         <Stack spacing={2}>
           <Skeleton isLoaded={!!bounty && !isLoading}>
             <HStack justify="space-between" spacing={{ base: 2, md: 10 }}>
               <Stack spacing={0}>
-                <Heading maxW="3xl">Bounty {bounty?.title}</Heading>
+                <Heading maxW="3xl">Bounty: {bounty?.title}</Heading>
                 <Badge
                   w="fit-content"
                   colorScheme={bounty?.isClaimed ? "red" : "green"}

@@ -79,8 +79,6 @@ export const HomePage = () => {
     return [total, claimed] as const;
   }, [data?.[2], usd]);
 
-  console.log(bountyPrize);
-
   const PAGE_SIZE = 10n;
   const [page, setPage] = useState(0);
   const {
