@@ -47,3 +47,36 @@ impl Display for Receipt {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{error::Error, str::FromStr};
+
+    use ethers_core::types::{Address, H256};
+    use risc0_zkvm::serde::to_vec;
+
+    use super::Receipt;
+
+    #[test]
+    fn correct_receipt_risc0_bytes_repr() -> Result<(), Box<dyn Error>> {
+        let receipt = Receipt {
+            submitter: Address::from_str("0x388C818CA8B9251b393131C08a736A67ccB19297")?
+                .to_fixed_bytes(),
+            txs_hash: H256::from_str(
+                "0xf917aec90938d013706032901593abeaecdca22e77468aff7711eee087bad41b",
+            )?
+            .to_fixed_bytes(),
+            enviroment_hash: H256::from_str(
+                "0x25e6fae36753c9598ef4ab3cb7856cc8094e3ee63f07538bdd6b12445b2c9e28",
+            )?
+            .to_fixed_bytes(),
+        };
+
+        assert_eq!(
+            receipt.as_bytes(),
+            bytemuck::cast_slice::<u32, u8>(&to_vec(&receipt)?)
+        );
+
+        Ok(())
+    }
+}
