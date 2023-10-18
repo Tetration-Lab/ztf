@@ -20,6 +20,10 @@ export const chains = [
   //{ ...mantleTestnet, image: "/images/chains/mantle.svg" },
 ];
 
+export const getChain = (chainId: number) => {
+  return chains.find((chain) => chain.id === chainId);
+};
+
 const { publicClient } = configureChains(chains, [
   publicProvider(),
   publicProvider(),

@@ -34,14 +34,10 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
-import {
-  useChainId,
-  useNetwork,
-  usePublicClient,
-  useWalletClient,
-} from "wagmi";
+import { useChainId, usePublicClient, useWalletClient } from "wagmi";
 import { default as NextLink } from "next/link";
 import { InputField } from "@/components/Input/InputField";
+import { getChain } from "@/constants/web3";
 
 const SetupDetails = () => {
   return (
@@ -159,8 +155,8 @@ export const CreatePage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { chain } = useNetwork();
   const chainId = useChainId();
+  const chain = getChain(chainId);
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };

@@ -24,13 +24,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex } from "viem";
-import {
-  useChainId,
-  useNetwork,
-  usePublicClient,
-  useWalletClient,
-} from "wagmi";
+import { useChainId, usePublicClient, useWalletClient } from "wagmi";
 import { InputField } from "@/components/Input/InputField";
+import { getChain } from "@/constants/web3";
 
 const SetupDetails = () => {
   return (
@@ -110,7 +106,7 @@ export const ClaimPage = () => {
     reset,
   } = useForm<BountyClaimInfo>();
   const chainId = useChainId();
-  const { chain } = useNetwork();
+  const chain = getChain(chainId);
 
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
