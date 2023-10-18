@@ -26,6 +26,7 @@ import _ from "lodash";
 import { useRouter } from "next/router";
 import numbro from "numbro";
 import { FaChevronDown } from "react-icons/fa";
+import { useChainId } from "wagmi";
 
 export const BountyPage = () => {
   const {

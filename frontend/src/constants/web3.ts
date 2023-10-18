@@ -1,44 +1,34 @@
-import { createConfig, sepolia } from "wagmi";
-import { createPublicClient, defineChain, http } from "viem";
+import { configureChains, createConfig } from "wagmi";
 import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { createWeb3Modal } from "@web3modal/wagmi";
 import { DESCRIPTION, TITLE } from "./texts";
 import theme from "@/themes";
+import { publicProvider } from "wagmi/providers/public";
+import { goerli, mantleTestnet, scrollSepolia } from "viem/chains";
 
 const metadata = {
   name: TITLE,
   description: DESCRIPTION,
-  url: "",
-  icons: [],
+  url: "https://ztf.tetrationlab.com/",
+  icons: ["🥷"],
 };
-export const chain = defineChain({
-  ...sepolia,
-  rpcUrls: {
-    alchemy: {
-      http: ["https://eth-sepolia.g.alchemy.com/v2"],
-      webSocket: ["wss://eth-sepolia.g.alchemy.com/v2"],
-    },
-    infura: {
-      http: ["https://sepolia.infura.io/v3"],
-      webSocket: ["wss://sepolia.infura.io/ws/v3"],
-    },
-    default: {
-      http: ["https://rpc.sepolia.org"],
-    },
-    public: {
-      http: ["https://rpc.sepolia.org"],
-    },
-  },
-});
-const chains = [chain];
+
+export const chains = [
+  { ...goerli, image: "/images/chains/ethereum.png" },
+  { ...scrollSepolia, image: "/images/chains/scroll.png" },
+  { ...mantleTestnet, image: "/images/chains/mantle.svg" },
+];
+
+const { publicClient } = configureChains(chains, [
+  publicProvider(),
+  publicProvider(),
+  publicProvider(),
+]);
 
 export const wagmiConfig = createConfig({
   autoConnect: true,
-  publicClient: createPublicClient({
-    chain,
-    transport: http(),
-  }),
+  publicClient,
   connectors: [
     new WalletConnectConnector({
       chains,
@@ -57,7 +47,8 @@ export const wagmiConfig = createConfig({
   ],
 });
 
-createWeb3Modal({
+export const web3Modal = createWeb3Modal({
+  defaultChain: chains[0],
   wagmiConfig,
   chains,
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "",

@@ -3,7 +3,6 @@ import { AppHeader, Navbar, Section } from "@/components/common";
 import { ONEDARK_COLOR_PROPS } from "@/constants/colors";
 import { MOCK_CONTRACT_ADDRESS } from "@/constants/mocks";
 import { ENV_FLAG_INFO } from "@/constants/texts";
-import { chain } from "@/constants/web3";
 import { highlight } from "@/utils/json";
 import {
   Button,
@@ -24,6 +23,7 @@ import { useState } from "react";
 import { FieldError, useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address } from "viem";
+import { useAccount, useNetwork } from "wagmi";
 
 const SetupDetails = () => {
   return (
@@ -196,6 +196,8 @@ export const CreatePage = () => {
     }
   };
 
+  const { chain } = useNetwork();
+
   return (
     <>
       <AppHeader title="Create Bounty" />
@@ -204,13 +206,13 @@ export const CreatePage = () => {
         <Stack spacing={4}>
           <Heading>Create Bounty</Heading>
           <Text wordBreak="break-all" fontSize="lg">
-            Contract lived in <chakra.span as="b">{chain.name}</chakra.span> at{" "}
+            Contract lived in <chakra.span as="b">{chain?.name}</chakra.span> at{" "}
             <chakra.span
               bg="gray.500"
               fontFamily="Fira Code"
               as={Link}
               isExternal
-              href={`${chain.blockExplorers.default.url}/address/${MOCK_CONTRACT_ADDRESS}`}
+              href={`${chain?.blockExplorers?.default.url}/address/${MOCK_CONTRACT_ADDRESS}`}
             >
               {MOCK_CONTRACT_ADDRESS.toLowerCase()}
             </chakra.span>

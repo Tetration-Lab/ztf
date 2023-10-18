@@ -7,6 +7,8 @@ import {
   HStack,
   IconButton,
   Link,
+  Image,
+  Button,
 } from "@chakra-ui/react";
 import { Section, Navbar, Footer, AppHeader } from "@/components/common";
 import { ValueCard } from "@/components/Card/ValueCard";
@@ -19,8 +21,18 @@ import {
   ChevronRightIcon,
   ExternalLinkIcon,
 } from "@chakra-ui/icons";
+import { useAccount, useChainId, useSwitchNetwork } from "wagmi";
+import { chains, web3Modal } from "@/constants/web3";
 
 export const HomePage = () => {
+  const {
+    switchNetwork,
+    isLoading: isSwitching,
+    pendingChainId,
+  } = useSwitchNetwork();
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
+
   const PAGE_SIZE = 10;
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -64,6 +76,27 @@ export const HomePage = () => {
             </Link>{" "}
             team!
           </Text>
+          <Stack>
+            <Text fontSize="lg">Supported Chains</Text>
+            <Wrap spacingX={2}>
+              {chains.map((c, i) => (
+                <Button
+                  key={i}
+                  as={Button}
+                  gap={2}
+                  isLoading={isSwitching && pendingChainId === c.id}
+                  isActive={isConnected && chainId === c.id}
+                  onClick={async () => {
+                    if (!isConnected || !switchNetwork) web3Modal.open();
+                    else switchNetwork(c.id);
+                  }}
+                >
+                  <Image key={i} src={c.image} boxSize="24px" />
+                  <Text as="b">{c.name}</Text>
+                </Button>
+              ))}
+            </Wrap>
+          </Stack>
           <Wrap py={2}>
             <ValueCard title="Available Bounty" value={139} />
             <ValueCard title="Available" value={100230} valuePrefix="$" />

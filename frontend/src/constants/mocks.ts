@@ -12,7 +12,7 @@ export const MOCK_BOUNTIES: Bounty[] = [
     amount: 100,
     lastUpdated: new Date("17 Oct 2023"),
     ipfsHash: "QmUhguprqR9wCh6k1f9q8SDymxffxksr6XKR1m2iTgBWGR",
-    currency: "0x628ebc64a38269e031afbdd3c5ba857483b5d048",
+    currency: "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
   },
   {
     id: "1",
@@ -22,6 +22,6 @@ export const MOCK_BOUNTIES: Bounty[] = [
     amount: 12501,
     lastUpdated: new Date("17 Oct 2023"),
     ipfsHash: "QmUhguprqR9wCh6k1f9q8SDymxffxksr6XKR1m2iTgBWGR",
-    currency: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    currency: "0xd8134205b0328f5676aaefb3b2a0dc15f4029d8c",
   },
 ];

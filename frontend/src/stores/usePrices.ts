@@ -22,7 +22,9 @@ export const usePrices = create<IPricesStore & IPricesStoreAction>(
       });
     },
     getPrice: (denom: string) => {
-      const price = get().usd[denom.toUpperCase()];
+      const d = denom.toUpperCase();
+      if (d === "SDAI") return 1.04;
+      const price = get().usd[d];
       return price ? 1 / price : 0;
     },
   })
