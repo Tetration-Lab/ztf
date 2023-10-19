@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 import "./IFlag.sol";
 import "./ICallback.sol";
 import "./IRiscZeroVerifier.sol";
+import "./IWormholeRelayer.sol";
 import "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/token/ERC20/IERC20.sol";
 import "@openzeppelin/access/Ownable.sol";
@@ -12,9 +13,11 @@ struct Bounty {
     address owner;
     address callback;
     address asset;
-    uint amount;
+    uint16 chainID; // 0 for this chain. if not 0, require wormhole relayer on the chain.
     bool claimed;
-    uint lastUpdated;
+    uint32 gasLimit; // for cross chain callback
+    uint256 amount;
+    uint256 lastUpdated;
     bytes32 envHash;
     string title;
     string ipfsHash; // ipfs hash of the bounty
@@ -22,10 +25,12 @@ struct Bounty {
 
 struct SecondaryCallback {
     address callback;
-    uint targetBounty;
+    uint256 targetBounty;
+    uint256 amount;
     address asset;
-    uint amount;
     bool claimed;
+    uint16 chainID; // 0 for this chain. if not 0, require wormhole relayer on the chain.
+    uint32 gasLimit; // for cross chain callback
 }
 
 struct ZClaim {
@@ -45,7 +50,8 @@ contract ZTF is Ownable {
     using SafeERC20 for IERC20;
 
     bytes32 public PRE_STATE_DIGEST;
-    IRiscZeroVerifier public RISC_ZERO_VERIFIER;
+    IRiscZeroVerifier public immutable RISC_ZERO_VERIFIER;
+    IWormholeRelayer public immutable WORMHOLE_RELAYER;
 
     uint public numBounty = 0;
     uint public numCallback = 0;
@@ -63,10 +69,12 @@ contract ZTF is Ownable {
     constructor(
         bytes32 preStateDigest,
         address verifier,
+        address wormholeRelayer,
         address[] memory initAsset
     ) Ownable(msg.sender) {
         PRE_STATE_DIGEST = preStateDigest;
         RISC_ZERO_VERIFIER = IRiscZeroVerifier(verifier);
+        WORMHOLE_RELAYER = IWormholeRelayer(wormholeRelayer); // 0 if not exist on the chain
         for (uint i = 0; i < initAsset.length; i++) {
             _addNewAsset(initAsset[i]);
         }
@@ -127,8 +135,13 @@ contract ZTF is Ownable {
         uint amount,
         string memory title,
         string memory ipfsHash,
-        bytes32 envHash
+        bytes32 envHash,
+        uint16 chainID,
+        uint32 gasLimit
     ) external {
+        if (address(WORMHOLE_RELAYER) == address(0)) {
+            require(chainID == 0, "Invalid chainID");
+        }
         uint id = numBounty;
         numBounty = id + 1;
         bountyList[id] = Bounty({
@@ -137,10 +150,12 @@ contract ZTF is Ownable {
             callback: callback,
             asset: asset,
             amount: amount,
+            chainID: chainID,
             claimed: false,
             lastUpdated: block.timestamp,
             title: title,
             ipfsHash: ipfsHash,
+            gasLimit: gasLimit,
             envHash: envHash
         });
         require(
@@ -179,10 +194,15 @@ contract ZTF is Ownable {
         address callback,
         uint targetBounty,
         address asset,
-        uint amount
+        uint amount,
+        uint16 chainID,
+        uint32 gasLimit
     ) external {
         uint id = numCallback;
         numCallback = id + 1;
+        if (address(WORMHOLE_RELAYER) == address(0)) {
+            require(chainID == 0, "Invalid chainID");
+        }
         require(
             bountyList[targetBounty].owner != address(0),
             "Bounty does not exist"
@@ -192,6 +212,8 @@ contract ZTF is Ownable {
             targetBounty: targetBounty,
             asset: asset,
             amount: amount,
+            chainID: chainID,
+            gasLimit: gasLimit,
             claimed: false
         });
         numCallback += 1;
@@ -222,7 +244,7 @@ contract ZTF is Ownable {
     }
 
     // capture flag with a valid proof
-    function claim(uint bountyID, ZClaim memory claimData) external {
+    function claim(uint bountyID, ZClaim memory claimData) external payable {
         // check
         require(
             RISC_ZERO_VERIFIER.verify(
@@ -244,9 +266,28 @@ contract ZTF is Ownable {
 
         // callback
         if (bountyList[bountyID].callback != address(0)) {
-            ICallback(bountyList[bountyID].callback).callback(
-                bountyList[bountyID].flag
-            );
+            if (bountyList[bountyID].chainID == 0) {
+                ICallback(bountyList[bountyID].callback).callback(
+                    bountyList[bountyID].flag
+                );
+            } else {
+                (uint fee, ) = WORMHOLE_RELAYER.quoteEVMDeliveryPrice(
+                    bountyList[bountyID].chainID,
+                    0,
+                    bountyList[bountyID].gasLimit
+                );
+                require(msg.value > fee, "Insufficient fee");
+                WORMHOLE_RELAYER.sendPayloadToEvm{value: fee}(
+                    bountyList[bountyID].chainID,
+                    bountyList[bountyID].callback,
+                    abi.encodeWithSignature(
+                        "callback(address)",
+                        bountyList[bountyID].flag
+                    ),
+                    0,
+                    bountyList[bountyID].gasLimit
+                );
+            }
         }
 
         // pay

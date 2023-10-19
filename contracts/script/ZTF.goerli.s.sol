@@ -23,6 +23,7 @@ contract ZTFScript is Script {
         ZTF ztf = new ZTF(
             0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
             address(verifier),
+            0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a, // wormhole relayer
             assets
         );
 

@@ -22,6 +22,7 @@ contract ZTFTest is Test {
         ztf = new ZTF(
             0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
             address(verifier),
+            address(0), // wormhole relayer
             assets
         );
     }
@@ -47,11 +48,13 @@ contract ZTFTest is Test {
             0,
             "test",
             "test",
-            0x0df1f020d5b509230c97e83dd5ee529b2f1115e13c68de2a241262abd47c820f
+            0x0df1f020d5b509230c97e83dd5ee529b2f1115e13c68de2a241262abd47c820f,
+            0,
+            0
         );
         vm.expectRevert("Invalid PoV");
         ztf.claim(
-            1,
+            0,
             ZClaim({
                 claimer: 0xF2F433bB4D87Ae3F7E5e5852692E29304C2d9511,
                 txs_hash: 0x0d52f7356537a0860d2992b78f804c813fc3573bcf45f136161862a64ff0f2e4,
@@ -61,7 +64,7 @@ contract ZTFTest is Test {
         );
 
         ztf.claim(
-            1,
+            0,
             ZClaim({
                 claimer: 0xF2F433bB4D87Ae3F7E5e5852692E29304C2d9511,
                 txs_hash: 0x0d52f7356537a0860d2992b78f804c813fc3573bcf45f136161862a64ff0f2e4,
@@ -71,7 +74,7 @@ contract ZTFTest is Test {
         );
         vm.expectRevert("Bounty already claimed");
         ztf.claim(
-            1,
+            0,
             ZClaim({
                 claimer: 0xF2F433bB4D87Ae3F7E5e5852692E29304C2d9511,
                 txs_hash: 0x0d52f7356537a0860d2992b78f804c813fc3573bcf45f136161862a64ff0f2e4,
