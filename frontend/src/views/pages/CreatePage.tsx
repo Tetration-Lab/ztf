@@ -408,7 +408,7 @@ export const CreatePage = () => {
                   }),
                   placeholder: "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
                 }}
-                error={errors.amount}
+                error={errors.callback}
               />
             </Stack>
             <Stack
