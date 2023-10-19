@@ -47,6 +47,7 @@ import { InputField } from "@/components/Input/InputField";
 import { getChain, web3Modal } from "@/constants/web3";
 import { ADDRESS_REGEX, BYTES32_REGEX, IPFS_CID_REGEX } from "@/utils/string";
 import { formatAddress } from "@/utils/address";
+import { goerli } from "viem/chains";
 
 const SetupDetails = () => {
   return (
@@ -149,6 +150,8 @@ interface BountyInfo {
   ipfsHash: string;
   envHash: Hex;
   callback?: Address;
+  chainId?: number;
+  gasLimit?: number;
 }
 
 export const CreatePage = () => {
@@ -247,6 +250,8 @@ export const CreatePage = () => {
             data.title,
             data.ipfsHash,
             data.envHash as Hex,
+            data.chainId ?? 0,
+            data.gasLimit ?? 0,
           ],
         });
         const hash = await wallet?.writeContract(request);
@@ -392,6 +397,14 @@ export const CreatePage = () => {
                   </Select>
                 }
                 error={errors.currency}
+                sponsor={
+                  chainId === goerli.id
+                    ? {
+                        name: "Spark",
+                        logo: "/images/protocols/spark.svg",
+                      }
+                    : undefined
+                }
               />
               <Collapse
                 in={watch("currency") && isConnected && balance !== undefined}
@@ -419,7 +432,7 @@ export const CreatePage = () => {
                 error={errors.amount}
               />
               <InputField
-                title="Callback Address"
+                title="Callback Address (Optional)"
                 description="The address to be called when the bounty is claimed. Must starts with `0x...`"
                 inputProps={{
                   ...register("callback", {
@@ -431,6 +444,63 @@ export const CreatePage = () => {
                 }}
                 error={errors.callback}
               />
+              {chain?.wormholeEnabled && (
+                <>
+                  <InputField
+                    title="Callback Chain (Optional)"
+                    description="Chain id of the callback address. Leave empty for same chain. If this is present, callback process will be passed through wormhole bridge and call the callback address in that chain."
+                    inputProps={{
+                      ...register("chainId", {
+                        required: false,
+                        setValueAs: (v) => (v ? parseInt(v) : undefined),
+                        validate: (v) => {
+                          if (v === undefined) return true;
+                          return !isNaN(Number(v))
+                            ? v === 0
+                              ? "Chain id cannot be 0"
+                              : v === chainId
+                              ? "Chain id cannot be the same as the current chain"
+                              : true
+                            : "Invalid chain id";
+                        },
+                      }),
+                      placeholder: "1",
+                    }}
+                    error={errors.chainId}
+                    sponsor={{
+                      name: "Wormhole",
+                      logo: "/images/protocols/wormhole.png",
+                    }}
+                  />
+                  <InputField
+                    title="Callback Gas Limit (Optional)"
+                    description="Gas limit if callback cross-chain. Must specify if callback chain is not empty. Too little gas limit might cause callback transaction to fail."
+                    inputProps={{
+                      ...register("gasLimit", {
+                        required: false,
+                        setValueAs: (v) => (v ? parseInt(v) : undefined),
+                        validate: (v) => {
+                          const chainIdInput = watch("chainId");
+                          if (v === undefined && !chainIdInput) return true;
+                          return v === undefined && chainIdInput
+                            ? "Gas limit must be specified if callback chain is not empty"
+                            : v !== undefined && !isNaN(Number(v))
+                            ? v === 0
+                              ? "Gas limit cannot be 0"
+                              : true
+                            : "Invalid gas limit";
+                        },
+                      }),
+                      placeholder: "200000",
+                    }}
+                    error={errors.gasLimit}
+                    sponsor={{
+                      name: "Wormhole",
+                      logo: "/images/protocols/wormhole.png",
+                    }}
+                  />
+                </>
+              )}
             </Stack>
             <Stack
               justify="center"

@@ -15,7 +15,7 @@ const metadata = {
 };
 
 export const chains = [
-  { ...goerli, image: "/images/chains/ethereum.png" },
+  { ...goerli, image: "/images/chains/ethereum.png", wormholeEnabled: true },
   //{ ...scrollSepolia, image: "/images/chains/scroll.png" },
   //{ ...mantleTestnet, image: "/images/chains/mantle.svg" },
 ];
