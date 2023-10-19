@@ -268,7 +268,8 @@ contract ZTF is Ownable {
         if (bountyList[bountyID].callback != address(0)) {
             if (bountyList[bountyID].chainID == 0) {
                 ICallback(bountyList[bountyID].callback).callback(
-                    bountyList[bountyID].flag
+                    bountyList[bountyID].flag,
+                    claimData.claimer
                 );
             } else {
                 (uint fee, ) = WORMHOLE_RELAYER.quoteEVMDeliveryPrice(
@@ -280,10 +281,7 @@ contract ZTF is Ownable {
                 WORMHOLE_RELAYER.sendPayloadToEvm{value: fee}(
                     bountyList[bountyID].chainID,
                     bountyList[bountyID].callback,
-                    abi.encodeWithSignature(
-                        "callback(address)",
-                        bountyList[bountyID].flag
-                    ),
+                    abi.encode(bountyList[bountyID].flag, claimData.claimer),
                     0,
                     bountyList[bountyID].gasLimit
                 );
@@ -302,6 +300,60 @@ contract ZTF is Ownable {
         ].amount;
 
         emit BountyClaimed(bountyID, claimData.claimer);
+    }
+
+    function triggerCallback(uint[] memory targets) external payable {
+        uint eth = msg.value;
+        for (uint i = 0; i < targets.length; i++) {
+            require(
+                secondaryCallbacks[targets[i]].callback != address(0),
+                "Secondary callback does not exist"
+            );
+            require(
+                bountyList[secondaryCallbacks[targets[i]].targetBounty]
+                    .claimed == true,
+                "Target bounty not claimed"
+            );
+            require(
+                secondaryCallbacks[targets[i]].claimed == false,
+                "Secondary callback already claimed"
+            );
+            secondaryCallbacks[targets[i]].claimed = true;
+
+            if (secondaryCallbacks[targets[i]].chainID == 0) {
+                ICallback(secondaryCallbacks[targets[i]].callback).callback(
+                    bountyList[secondaryCallbacks[targets[i]].targetBounty]
+                        .flag,
+                    msg.sender
+                );
+            } else {
+                (uint fee, ) = WORMHOLE_RELAYER.quoteEVMDeliveryPrice(
+                    secondaryCallbacks[targets[i]].chainID,
+                    0,
+                    secondaryCallbacks[targets[i]].gasLimit
+                );
+                require(eth > fee, "insufficient fund");
+                eth = eth - fee;
+                WORMHOLE_RELAYER.sendPayloadToEvm{value: fee}(
+                    secondaryCallbacks[targets[i]].chainID,
+                    secondaryCallbacks[targets[i]].callback,
+                    abi.encode(
+                        bountyList[secondaryCallbacks[targets[i]].targetBounty]
+                            .flag,
+                        msg.sender
+                    ),
+                    0,
+                    secondaryCallbacks[targets[i]].gasLimit
+                );
+            }
+
+            IERC20(secondaryCallbacks[targets[i]].asset).safeTransfer(
+                msg.sender,
+                secondaryCallbacks[targets[i]].amount
+            );
+            assetList[assetID[secondaryCallbacks[targets[i]].asset]]
+                .claimed += secondaryCallbacks[targets[i]].amount;
+        }
     }
 
     function buildJournal(
