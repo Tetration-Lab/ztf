@@ -34,10 +34,15 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
-import { useChainId, usePublicClient, useWalletClient } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  usePublicClient,
+  useWalletClient,
+} from "wagmi";
 import { default as NextLink } from "next/link";
 import { InputField } from "@/components/Input/InputField";
-import { getChain } from "@/constants/web3";
+import { getChain, web3Modal } from "@/constants/web3";
 
 const SetupDetails = () => {
   return (
@@ -138,7 +143,8 @@ interface BountyInfo {
   amount: number;
   title: string;
   ipfsHash: string;
-  envHash: string;
+  envHash: Hex;
+  callback?: Address;
 }
 
 export const CreatePage = () => {
@@ -159,6 +165,7 @@ export const CreatePage = () => {
   const chain = getChain(chainId);
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
+  const { isConnected } = useAccount();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
   const availableTokens = CURRENCY_BY_CHAIN_ID[chainId] ?? [];
@@ -224,7 +231,7 @@ export const CreatePage = () => {
           functionName: "newBounty",
           args: [
             ZERO_ADDRESS,
-            ZERO_ADDRESS,
+            data.callback ?? ZERO_ADDRESS,
             data.currency,
             amount,
             data.title,
@@ -391,26 +398,47 @@ export const CreatePage = () => {
                 }}
                 error={errors.amount}
               />
+              <InputField
+                title="Callback Address"
+                description="The address to be called when the bounty is claimed. Must starts with `0x...`"
+                inputProps={{
+                  ...register("callback", {
+                    required: false,
+                    validate: (v) =>
+                      v === undefined || /0x[0-9a-fA-F]{40}/g.test(v)
+                        ? true
+                        : "Invalid address",
+                  }),
+                  placeholder: "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
+                }}
+                error={errors.amount}
+              />
             </Stack>
             <Stack
               justify="center"
               py={8}
               direction={{ base: "column", md: "row" }}
             >
-              <Button
-                isDisabled={isApproved || !wallet}
-                isLoading={isApproving}
-                type="submit"
-              >
-                Approve Bounty Payment
-              </Button>
-              <Button
-                isDisabled={!isApproved || !wallet}
-                isLoading={isCreating}
-                type="submit"
-              >
-                Create Bounty
-              </Button>
+              {!isConnected ? (
+                <Button onClick={() => web3Modal.open()}>Connect Wallet</Button>
+              ) : (
+                <>
+                  <Button
+                    isDisabled={isApproved}
+                    isLoading={isApproving}
+                    type="submit"
+                  >
+                    Approve Bounty Payment
+                  </Button>
+                  <Button
+                    isDisabled={!isApproved}
+                    isLoading={isCreating}
+                    type="submit"
+                  >
+                    Create Bounty
+                  </Button>
+                </>
+              )}
             </Stack>
           </form>
         </Stack>

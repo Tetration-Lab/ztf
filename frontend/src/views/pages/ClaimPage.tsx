@@ -26,13 +26,14 @@ import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex } from "viem";
 import {
+  useAccount,
   useChainId,
   useContractRead,
   usePublicClient,
   useWalletClient,
 } from "wagmi";
 import { InputField } from "@/components/Input/InputField";
-import { getChain } from "@/constants/web3";
+import { getChain, web3Modal } from "@/constants/web3";
 import { useRouter } from "next/router";
 import { bountyFromContractData } from "@/interfaces/bounty";
 import { ZERO_ADDRESS, getDenom } from "@/constants/currency";
@@ -123,6 +124,7 @@ export const ClaimPage = () => {
 
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
+  const { isConnected } = useAccount();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
   const {
@@ -340,9 +342,13 @@ export const ClaimPage = () => {
               py={8}
               direction={{ base: "column", md: "row" }}
             >
-              <Button isDisabled={!wallet} isLoading={isClaiming} type="submit">
-                Claim Bounty
-              </Button>
+              {!isConnected ? (
+                <Button onClick={() => web3Modal.open()}>Connect Wallet</Button>
+              ) : (
+                <Button isLoading={isClaiming} type="submit">
+                  Claim Bounty
+                </Button>
+              )}
             </Stack>
           </form>
         </Stack>
