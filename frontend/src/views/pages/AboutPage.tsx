@@ -36,8 +36,8 @@ export const AboutPage = () => {
                 - Callback target that implements the `ICallback` interface*.
               </Text>
               <Text as="i">
-                * This callback can implement any function (e.g. pause
-                protocol).
+                * This callback can implement any function (e.g. pause protocol,
+                additional payout based on % of TVL, etc).
               </Text>
               <Text>
                 - Environment config state (We only support sandbox environment
