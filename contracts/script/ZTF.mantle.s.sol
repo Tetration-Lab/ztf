@@ -17,8 +17,9 @@ contract ZTFScript is Script {
             ControlID.CONTROL_ID_1
         );
 
-        address[] memory assets = new address[](1);
-        assets[0] = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111;
+        address[] memory assets = new address[](2);
+        assets[0] = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111; // wETH
+        assets[1] = 0xa4c4cb2A072eE99f77212Fa18c2B7Ca26DA23905; // wMNT
         ZTF ztf = new ZTF(
             0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
             address(verifier),
