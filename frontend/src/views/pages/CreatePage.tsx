@@ -399,7 +399,7 @@ export const CreatePage = () => {
                 }
                 error={errors.currency}
                 sponsor={
-                  chainId === goerli.id
+                  chain && chainId === goerli.id
                     ? {
                         name: "Spark",
                         logo: "/images/protocols/spark.svg",
@@ -445,7 +445,7 @@ export const CreatePage = () => {
                 }}
                 error={errors.callback}
               />
-              {chain?.wormholeEnabled && (
+              {chain && chain?.wormholeEnabled && (
                 <>
                   <InputField
                     title="Callback Chain (Optional)"
