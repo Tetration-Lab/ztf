@@ -2,7 +2,7 @@ import { Address, parseAbi } from "viem";
 import { goerli } from "viem/chains";
 
 export const CONTRACTS: { [chainId: number]: Address } = {
-  [goerli.id]: "0xbc0042af2b75ddf701d40c76190abaf77cc87432",
+  [goerli.id]: "0x4cbed73a45ec4070b363b59958324532bac2f576",
 };
 
 export const getZTFContract = (chainId: number): Address => {
