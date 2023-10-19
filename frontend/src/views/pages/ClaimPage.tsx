@@ -37,6 +37,7 @@ import { getChain, web3Modal } from "@/constants/web3";
 import { useRouter } from "next/router";
 import { bountyFromContractData } from "@/interfaces/bounty";
 import { ZERO_ADDRESS, getDenom } from "@/constants/currency";
+import { ADDRESS_REGEX, BYTES32_REGEX, G16_SEAL_REGEX } from "@/utils/string";
 
 const SetupDetails = () => {
   return (
@@ -288,7 +289,7 @@ export const ClaimPage = () => {
                   ...register("claimer", {
                     required: true,
                     validate: (v) =>
-                      /0x[0-9a-fA-F]{40}/.test(v) ? true : "Invalid address",
+                      ADDRESS_REGEX.test(v) ? true : "Invalid address",
                   }),
                   placeholder: "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
                 }}
@@ -301,7 +302,7 @@ export const ClaimPage = () => {
                   ...register("txsHash", {
                     required: true,
                     validate: (v) =>
-                      /0x[0-9a-fA-F]{64}/.test(v) ? true : "Invalid hex",
+                      BYTES32_REGEX.test(v) ? true : "Invalid hex",
                   }),
                   placeholder:
                     "0x17436af7b3d1fe3b4f49ebcc7e48c0a7045ae86c9012a013032768b2f1a0bf56",
@@ -315,7 +316,7 @@ export const ClaimPage = () => {
                   ...register("postStateDigest", {
                     required: true,
                     validate: (v) =>
-                      /0x[0-9a-fA-F]{64}/.test(v) ? true : "Invalid hex",
+                      BYTES32_REGEX.test(v) ? true : "Invalid hex",
                   }),
                   placeholder:
                     "0x17436af7b3d1fe3b4f49ebcc7e48c0a7045ae86c9012a013032768b2f1a0bf56",
@@ -329,8 +330,7 @@ export const ClaimPage = () => {
                   ...register("seal", {
                     required: true,
                     validate: (v) =>
-                      (v.startsWith("0x") && v.length === 514) ||
-                      "Invalid seal",
+                      G16_SEAL_REGEX.test(v) ? true : "Invalid seal",
                   }),
                   placeholder: "0x...",
                 }}

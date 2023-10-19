@@ -5,6 +5,13 @@ export const CURRENCY: { [address: Address]: [string, number] } = {
   "0x5300000000000000000000000000000000000004": ["weth", 18],
   "0xd8134205b0328f5676aaefb3b2a0dc15f4029d8c": ["sdai", 18],
   "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6": ["weth", 18],
+  "0xa4c4cb2A072eE99f77212Fa18c2B7Ca26DA23905": ["mnt", 18],
+};
+
+export const CURRENCY_ID_DENOM_COINGECKO: { [id: string]: string[] } = {
+  ethereum: ["weth", "eth"],
+  mantle: ["mnt"],
+  "savings-dai": ["sdai"],
 };
 
 export const CURRENCY_BY_CHAIN_ID: { [chainId: number]: Address[] } = {

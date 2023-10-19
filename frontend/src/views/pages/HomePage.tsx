@@ -97,42 +97,51 @@ export const HomePage = () => {
       <Section>
         <Navbar />
         <Stack>
-          <Heading>ZTF</Heading>
-          <Text>
-            On-chain ctf with claimable bounty using zero-knowledge proof
-          </Text>
-          <Text as="i">
-            Made with love by{" "}
-            <Link href="https://www.tetrationlab.com/" isExternal>
-              Tetration Lab <ExternalLinkIcon boxSize="12px" />
-            </Link>{" "}
-            team!
-          </Text>
-          <Stack>
-            <Text fontSize="lg">Supported Chains</Text>
-            <Wrap spacingX={2}>
-              {chains.map((c, i) => (
-                <Button
-                  key={i}
-                  as={Button}
-                  gap={2}
-                  isLoading={isSwitching && pendingChainId === c.id}
-                  isActive={isConnected && chainId === c.id}
-                  cursor={chainId === c.id ? "default" : "pointer"}
-                  onClick={
-                    isSwitching || chainId === c.id
-                      ? undefined
-                      : async () => {
-                          if (!isConnected || !switchNetwork) web3Modal.open();
-                          else switchNetwork(c.id);
-                        }
-                  }
-                >
-                  <Image key={i} src={c.image} boxSize="24px" />
-                  <Text as="b">{c.name}</Text>
-                </Button>
-              ))}
-            </Wrap>
+          <Stack
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "start", md: "center" }}
+          >
+            <Stack>
+              <Heading>ZTF</Heading>
+              <Text>
+                On-chain ctf with claimable bounty using zero-knowledge proof
+              </Text>
+              <Text as="i">
+                Made with love by{" "}
+                <Link href="https://www.tetrationlab.com/" isExternal>
+                  Tetration Lab <ExternalLinkIcon boxSize="12px" />
+                </Link>{" "}
+                team!
+              </Text>
+            </Stack>
+            <Stack align={{ base: "start", md: "end" }}>
+              <Text fontSize="lg">Supported Chains</Text>
+              <Wrap spacingX={2}>
+                {chains.map((c, i) => (
+                  <Button
+                    key={i}
+                    as={Button}
+                    gap={2}
+                    isLoading={isSwitching && pendingChainId === c.id}
+                    isActive={isConnected && chainId === c.id}
+                    cursor={chainId === c.id ? "default" : "pointer"}
+                    onClick={
+                      isSwitching || chainId === c.id
+                        ? undefined
+                        : async () => {
+                            if (!isConnected || !switchNetwork)
+                              web3Modal.open();
+                            else switchNetwork(c.id);
+                          }
+                    }
+                  >
+                    <Image key={i} src={c.image} boxSize="24px" />
+                    <Text as="b">{c.name}</Text>
+                  </Button>
+                ))}
+              </Wrap>
+            </Stack>
           </Stack>
           <Wrap py={2}>
             <ValueCard

@@ -43,6 +43,7 @@ import {
 import { default as NextLink } from "next/link";
 import { InputField } from "@/components/Input/InputField";
 import { getChain, web3Modal } from "@/constants/web3";
+import { ADDRESS_REGEX, BYTES32_REGEX, IPFS_CID_REGEX } from "@/utils/string";
 
 const SetupDetails = () => {
   return (
@@ -231,7 +232,7 @@ export const CreatePage = () => {
           functionName: "newBounty",
           args: [
             ZERO_ADDRESS,
-            data.callback ?? ZERO_ADDRESS,
+            data.callback || ZERO_ADDRESS,
             data.currency,
             amount,
             data.title,
@@ -339,7 +340,7 @@ export const CreatePage = () => {
                   ...register("envHash", {
                     required: true,
                     validate: (v) =>
-                      /0x[0-9a-fA-F]{64}/g.test(v) ? true : "Invalid hash",
+                      BYTES32_REGEX.test(v) ? true : "Invalid hash",
                   }),
                   placeholder:
                     "0x2d6d931eaafbf58c5d639623ef1e19e626ffb3e9bdc0a6ee5a4da5879ddcb325",
@@ -354,9 +355,7 @@ export const CreatePage = () => {
                   ...register("ipfsHash", {
                     required: true,
                     validate: (v) =>
-                      /Qm[1-9A-HJ-NP-Za-km-z]{44}/g.test(v)
-                        ? true
-                        : "Invalid CID",
+                      IPFS_CID_REGEX.test(v) ? true : "Invalid CID",
                   }),
                   placeholder: "QmUhguprqR9wCh6k1f9q8SDymxffxksr6XKR1m2iTgBWGR",
                   maxLength: 46,
@@ -371,7 +370,7 @@ export const CreatePage = () => {
                     {...register("currency", {
                       required: true,
                       validate: (v) =>
-                        /0x[0-9a-fA-F]{40}/g.test(v) ? true : "Invalid address",
+                        ADDRESS_REGEX.test(v) ? true : "Invalid address",
                     })}
                     placeholder="Select currency"
                     isInvalid={!!errors.currency}
@@ -405,9 +404,7 @@ export const CreatePage = () => {
                   ...register("callback", {
                     required: false,
                     validate: (v) =>
-                      v === undefined || /0x[0-9a-fA-F]{40}/g.test(v)
-                        ? true
-                        : "Invalid address",
+                      !v || ADDRESS_REGEX.test(v) ? true : "Invalid address",
                   }),
                   placeholder: "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
                 }}
