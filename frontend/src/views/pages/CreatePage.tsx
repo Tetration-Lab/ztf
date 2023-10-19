@@ -223,6 +223,7 @@ export const CreatePage = () => {
         const { request } = await client.simulateContract({
           address: data.currency,
           abi: ERC20_ABI,
+          account: wallet?.account.address,
           functionName: "approve",
           args: [contract.address, amount],
         });
