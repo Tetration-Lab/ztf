@@ -5,6 +5,7 @@ import { AppHeader, Navbar, Section } from "@/components/common";
 import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import { getDenom } from "@/constants/currency";
 import { ENV_FLAG_INFO } from "@/constants/texts";
+import { getChain } from "@/constants/web3";
 import { bountyFromContractData } from "@/interfaces/bounty";
 import { usePrices } from "@/stores/usePrices";
 import { formatAddress } from "@/utils/address";
@@ -22,6 +23,7 @@ import {
   Text,
   Wrap,
   useDisclosure,
+  Link as ChakraLink,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
@@ -116,11 +118,17 @@ export const BountyPage = () => {
           >
             <Skeleton isLoaded={!!bounty && !isLoading} as={Stack} spacing={0}>
               <Text>ID: {bounty?.id}</Text>
-              <Text display={{ base: "none", md: "block" }}>
-                Owner: {ens ?? bounty?.owner.toLowerCase()}
-              </Text>
-              <Text display={{ base: "block", md: "none" }}>
-                Owner: {ens ?? formatAddress(bounty?.owner.toLowerCase()!)}
+
+              <Text>
+                Owner:{" "}
+                <ChakraLink
+                  href={`${
+                    getChain(chainId)?.blockExplorers.default.url
+                  }/address/${bounty?.owner}`}
+                  isExternal
+                >
+                  {ens ?? bounty?.owner.toLowerCase()}
+                </ChakraLink>
               </Text>
               <Text>
                 Last Updated: {bounty?.lastUpdated.toLocaleDateString()}

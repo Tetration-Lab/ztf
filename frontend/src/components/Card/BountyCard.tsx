@@ -1,11 +1,20 @@
 import { getDenom } from "@/constants/currency";
+import { getChain } from "@/constants/web3";
 import { Bounty } from "@/interfaces/bounty";
 import { usePrices } from "@/stores/usePrices";
 import { formatAddress } from "@/utils/address";
-import { Badge, Button, Card, Divider, Stack, Text } from "@chakra-ui/react";
+import {
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Stack,
+  Text,
+  Link as ChakraLink,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import numbro from "numbro";
-import { useEnsName } from "wagmi";
+import { useChainId, useEnsName } from "wagmi";
 
 export const BountyCard = ({
   id,
@@ -20,6 +29,7 @@ export const BountyCard = ({
   const { data: ens } = useEnsName({
     address: owner,
   });
+  const chainId = useChainId();
 
   return (
     <Card
@@ -39,7 +49,15 @@ export const BountyCard = ({
         Last updated: {lastUpdated.toLocaleDateString()}
       </Text>
       <Text color="gray.300" noOfLines={1}>
-        By {ens ?? formatAddress(owner)}
+        By{" "}
+        <ChakraLink
+          href={`${
+            getChain(chainId)?.blockExplorers.default.url
+          }/address/${owner}`}
+          isExternal
+        >
+          {ens ?? formatAddress(owner)}
+        </ChakraLink>
       </Text>
       <Badge colorScheme={isClaimed ? "red" : "green"} fontSize="sm" my={1}>
         {isClaimed ? "Claimed" : "Available"}
