@@ -14,7 +14,7 @@ export const CURRENCY_BY_CHAIN_ID: { [chainId: number]: Address[] } = {
   ],
 };
 
-export const getDenom = (address: Address): string => {
+export const getDenom = (address?: Address): string => {
   return CURRENCY[address?.toLowerCase() as Address]?.[0] ?? "";
 };
 

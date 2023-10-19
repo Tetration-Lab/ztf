@@ -4,6 +4,7 @@ import { ZTF_ABI, getZTFContract } from "@/constants/contracts";
 import {
   Button,
   Code,
+  Collapse,
   HStack,
   Heading,
   Icon,
@@ -20,13 +21,21 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import _ from "lodash";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
 import { Address, Hex } from "viem";
-import { useChainId, usePublicClient, useWalletClient } from "wagmi";
+import {
+  useChainId,
+  useContractRead,
+  usePublicClient,
+  useWalletClient,
+} from "wagmi";
 import { InputField } from "@/components/Input/InputField";
 import { getChain } from "@/constants/web3";
+import { useRouter } from "next/router";
+import { bountyFromContractData } from "@/interfaces/bounty";
+import { ZERO_ADDRESS, getDenom } from "@/constants/currency";
 
 const SetupDetails = () => {
   return (
@@ -103,7 +112,11 @@ export const ClaimPage = () => {
     register,
     formState: { errors, isDirty },
     handleSubmit,
+    setValue,
+    setError,
+    clearErrors,
     reset,
+    watch,
   } = useForm<BountyClaimInfo>();
   const chainId = useChainId();
   const chain = getChain(chainId);
@@ -112,29 +125,49 @@ export const ClaimPage = () => {
   const { data: wallet } = useWalletClient();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
-  //const [bountyId, _setBountyId] = useState<number>();
-  //const setBountyId = useCallback(
-  //_.debounce((id: number) => _setBountyId(id), 1000),
-  //[]
-  //);
-  //useEffect(() => {
-  //const bid = watch("bountyId");
-  //if (bid && !isNaN(bid)) setBountyId(bid);
-  //}, [watch("bountyId")]);
-  //const { data } = useContractRead({
-  //...contract,
-  //functionName: "bountyList",
-  //args: [BigInt(bountyId ?? 0)],
-  //});
-  //const bounty = useMemo(
-  //() =>
-  //data
-  //? bountyFromContractData({ index: bountyId ?? 0, ...data })
-  //: undefined,
-  //[data]
-  //);
+  const {
+    query: { id },
+  } = useRouter();
+  useEffect(() => {
+    const iid = parseInt(String(id));
+    if (id && !isNaN(iid)) setValue("bountyId", iid);
+  }, [id]);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const bountySection = useDisclosure();
+  const [bountyId, _setBountyId] = useState<number>();
+  const setBountyId = useCallback(
+    _.debounce((id: number) => _setBountyId(id), 1000),
+    []
+  );
+  useEffect(() => {
+    const bid = watch("bountyId");
+    if (!isNaN(bid)) setBountyId(bid);
+    else bountySection.onClose();
+  }, [watch("bountyId")]);
+  const { data } = useContractRead({
+    ...contract,
+    functionName: "bountyList",
+    args: [BigInt(bountyId ?? 0)],
+  });
+  const bounty = useMemo(() => {
+    if (data && data.owner !== ZERO_ADDRESS) {
+      clearErrors("bountyId");
+      if (data.claimed)
+        setError("bountyId", {
+          message: "Bounty already claimed",
+          type: "validate",
+        });
+      bountySection.onOpen();
+      return bountyFromContractData({ index: bountyId ?? 0, ...data });
+    } else {
+      setError("bountyId", {
+        message: "Invalid bounty",
+        type: "validate",
+      });
+    }
+  }, [data]);
+
+  const claimedModal = useDisclosure();
   const [isClaiming, setIsClaiming] = useState(false);
 
   const onSubmit = async (data: BountyClaimInfo) => {
@@ -160,7 +193,7 @@ export const ClaimPage = () => {
         hash,
       });
       if (tx.status === "success") {
-        onOpen();
+        claimedModal.onOpen();
         reset();
       }
     } finally {
@@ -171,13 +204,20 @@ export const ClaimPage = () => {
   return (
     <>
       <AppHeader title="Claim Bounty" />
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <Modal
+        isOpen={claimedModal.isOpen}
+        onClose={claimedModal.onClose}
+        isCentered
+      >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Bounty Claimed!</ModalHeader>
+          <ModalHeader>Bounty Claimed</ModalHeader>
           <ModalBody>
             <Stack spacing={4}>
-              <Button w="full" onClick={onClose}>
+              <Text>
+                You've got ${bounty?.amount} ${getDenom(bounty?.currency)}!
+              </Text>
+              <Button w="full" onClick={claimedModal.onClose}>
                 Back
               </Button>
             </Stack>
@@ -228,6 +268,17 @@ export const ClaimPage = () => {
                 }}
                 error={errors.bountyId}
               />
+              <Collapse in={bountySection.isOpen && !!bounty} animateOpacity>
+                <HStack justify="space-between" spacing={4}>
+                  <Text>{bounty?.title}</Text>
+                  <Text>
+                    Bounty:{" "}
+                    <chakra.span as="b">
+                      {bounty?.amount} {getDenom(bounty?.currency)}
+                    </chakra.span>
+                  </Text>
+                </HStack>
+              </Collapse>
               <InputField
                 title="Claimer Address"
                 description="Address of bounty payment recipient. This address should match submitter address in the zk proof."

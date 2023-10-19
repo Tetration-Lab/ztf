@@ -11,6 +11,7 @@ import { formatAddress } from "@/utils/address";
 import { fetchBountyDetailIpfs } from "@/utils/ipfs";
 import {
   Badge,
+  Button,
   Collapse,
   HStack,
   Heading,
@@ -24,6 +25,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import numbro from "numbro";
 import { useMemo } from "react";
@@ -70,7 +72,11 @@ export const BountyPage = () => {
         <Navbar />
         <Stack spacing={2}>
           <Skeleton isLoaded={!!bounty && !isLoading}>
-            <HStack justify="space-between" spacing={{ base: 2, md: 10 }}>
+            <Stack
+              justify="space-between"
+              spacing={{ base: 2, md: 10 }}
+              direction={{ base: "column", md: "row" }}
+            >
               <Stack spacing={0}>
                 <Heading maxW="3xl">Bounty: {bounty?.title}</Heading>
                 <Badge
@@ -81,7 +87,7 @@ export const BountyPage = () => {
                   {bounty?.isClaimed ? "Claimed" : "Available"}
                 </Badge>
               </Stack>
-              <Stack align="end" spacing={0}>
+              <Stack align={{ base: "start", md: "end" }} spacing={0}>
                 <Heading>
                   {numbro(bounty?.amount!).format({
                     average: true,
@@ -101,20 +107,34 @@ export const BountyPage = () => {
                   })}
                 </Text>
               </Stack>
-            </HStack>
+            </Stack>
           </Skeleton>
-          <Skeleton isLoaded={!!bounty && !isLoading} as={Stack} spacing={0}>
-            <Text>ID: {bounty?.id}</Text>
-            <Text display={{ base: "none", md: "block" }}>
-              Owner: {ens ?? bounty?.owner.toLowerCase()}
-            </Text>
-            <Text display={{ base: "block", md: "none" }}>
-              Owner: {ens ?? formatAddress(bounty?.owner.toLowerCase()!)}
-            </Text>
-            <Text>
-              Last Updated: {bounty?.lastUpdated.toLocaleDateString()}
-            </Text>
-          </Skeleton>
+          <Stack
+            spacing={4}
+            justify="space-between"
+            direction={{ base: "column", md: "row" }}
+          >
+            <Skeleton isLoaded={!!bounty && !isLoading} as={Stack} spacing={0}>
+              <Text>ID: {bounty?.id}</Text>
+              <Text display={{ base: "none", md: "block" }}>
+                Owner: {ens ?? bounty?.owner.toLowerCase()}
+              </Text>
+              <Text display={{ base: "block", md: "none" }}>
+                Owner: {ens ?? formatAddress(bounty?.owner.toLowerCase()!)}
+              </Text>
+              <Text>
+                Last Updated: {bounty?.lastUpdated.toLocaleDateString()}
+              </Text>
+            </Skeleton>
+            <Button
+              as={Link}
+              href={`/claim?id=${id}`}
+              size="lg"
+              isDisabled={bounty?.isClaimed}
+            >
+              Claim Bounty
+            </Button>
+          </Stack>
           <Heading fontSize="2xl">Related Links</Heading>
           <Wrap py={2}>
             {detail.isLoading || !detail.data
@@ -127,7 +147,7 @@ export const BountyPage = () => {
           <HStack>
             <Heading fontSize="xl">Environment Flag Info</Heading>
             <IconButton
-              size="sm"
+              size="xs"
               icon={
                 <Icon
                   as={FaChevronDown}
