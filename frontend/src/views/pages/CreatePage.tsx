@@ -13,6 +13,7 @@ import { highlight } from "@/utils/json";
 import {
   Button,
   Code,
+  Collapse,
   HStack,
   Heading,
   Icon,
@@ -37,6 +38,7 @@ import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
 import {
   useAccount,
   useChainId,
+  useContractRead,
   usePublicClient,
   useWalletClient,
 } from "wagmi";
@@ -44,6 +46,7 @@ import { default as NextLink } from "next/link";
 import { InputField } from "@/components/Input/InputField";
 import { getChain, web3Modal } from "@/constants/web3";
 import { ADDRESS_REGEX, BYTES32_REGEX, IPFS_CID_REGEX } from "@/utils/string";
+import { formatAddress } from "@/utils/address";
 
 const SetupDetails = () => {
   return (
@@ -178,17 +181,23 @@ export const CreatePage = () => {
       : parseUnits(_.toString(watch("amount")), getDecimal(watch("currency")));
   }, [watch("amount"), watch("currency")]);
 
+  const { data: balanceData } = useContractRead({
+    address: watch("currency"),
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [wallet?.account.address ?? ZERO_ADDRESS],
+  });
+  const balance = useMemo(() => {
+    return isConnected && balanceData !== undefined
+      ? Number(formatUnits(balanceData, getDecimal(watch("currency"))))
+      : undefined;
+  }, [isConnected, balanceData, watch("currency")]);
+
   const onSubmit = async (data: BountyInfo) => {
     if (!isApproved) {
       try {
         setIsApproving(true);
-        const amount = await client.readContract({
-          address: data.currency,
-          abi: ERC20_ABI,
-          functionName: "balanceOf",
-          args: [wallet?.account.address!],
-        });
-        if (amount < data.amount) {
+        if (!balance || balance < data.amount) {
           setError("amount", {
             type: "validate",
             message: `Insufficient balance, found ${formatUnits(
@@ -384,6 +393,18 @@ export const CreatePage = () => {
                 }
                 error={errors.currency}
               />
+              <Collapse
+                in={watch("currency") && isConnected && balance !== undefined}
+                animateOpacity
+              >
+                <HStack justify="space-between" spacing={4}>
+                  <HStack>
+                    <Text>{getDenom(watch("currency"))}</Text>
+                    <Text>{formatAddress(watch("currency"))}</Text>
+                  </HStack>
+                  <Text as="b">{balance}</Text>
+                </HStack>
+              </Collapse>
               <InputField
                 title="Amount"
                 description="The amount of currency to be used in the bounty."
