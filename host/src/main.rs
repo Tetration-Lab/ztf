@@ -4,6 +4,7 @@ use bonsai_sdk::alpha::Client;
 use dotenvy::dotenv;
 use ethers_core::types::Address;
 use lib::{secrets::totally_not_a_backdoor, utils::snark::g16_seal_to_token_bytes};
+use log::{debug, info};
 use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
@@ -11,6 +12,10 @@ use risc0_zkvm::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .parse_default_env()
+        .init();
     dotenv().ok();
     let client = Client::from_env()?;
 
@@ -22,21 +27,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         client.upload_img(&image_id, image)?;
         image_id
     };
-    println!("Image id: {}", img_id);
+    info!("Image id: 0x{}", img_id);
 
     // Create a secret
     let mut secret = totally_not_a_backdoor()?;
     secret.submitter = Address::from_str(&env::var("ADDRESS")?)?;
+    info!("Submitter: {:?}", secret.submitter);
 
     let input_data = bytemuck::cast_slice(&to_vec(&secret)?).to_vec();
     let input_id = client.upload_input(input_data)?;
 
     let session = client.create_session(img_id, input_id)?;
-    println!("Created session: {}", session.uuid);
+    debug!("Created session: {}", session.uuid);
     let receipt = loop {
         let res = session.status(&client)?;
         if res.status == "RUNNING" {
-            println!(
+            debug!(
                 "Current status: {} - state: {} - continue polling...",
                 res.status,
                 res.state.unwrap_or_default()
@@ -67,19 +73,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let metadata = receipt.get_metadata()?;
 
-    println!("Receipt: {}", journal);
-    println!("Env Hash: 0x{}", hex::encode(journal.enviroment_hash));
-    println!("Txs Hash: 0x{}", hex::encode(journal.txs_hash));
-    println!("Metadata: {:?}", metadata);
-    println!("Pre state digest: {}", metadata.pre.digest());
+    debug!("Receipt: {}", journal);
+    info!("Env Hash: 0x{}", hex::encode(journal.enviroment_hash));
+    info!("Txs Hash: 0x{}", hex::encode(journal.txs_hash));
+    debug!("Metadata: {:?}", metadata);
+    debug!("Pre state digest: 0x{}", metadata.pre.digest());
 
     let snark_session = client.create_snark(session.uuid)?;
-    println!("Created snark session: {}", snark_session.uuid);
+    debug!("Created snark session: {}", snark_session.uuid);
     let snark_receipt = loop {
         let res = snark_session.status(&client)?;
         match res.status.as_str() {
             "RUNNING" => {
-                println!("Current status: {} - continue polling...", res.status);
+                debug!("Current status: {} - continue polling...", res.status);
                 std::thread::sleep(Duration::from_secs(20));
                 continue;
             }
@@ -101,11 +107,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
     let seal_bytes = g16_seal_to_token_bytes(&snark_receipt.snark)?;
-    println!(
+    info!(
         "Seal bytes: 0x{}",
         hex::encode(seal_bytes.into_bytes().unwrap())
     );
-    println!(
+    info!(
         "Post state digest: 0x{}",
         hex::encode(snark_receipt.post_state_digest)
     );
