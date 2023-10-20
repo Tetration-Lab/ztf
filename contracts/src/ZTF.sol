@@ -80,6 +80,10 @@ contract ZTF is Ownable {
         }
     }
 
+    function setPreStateDigest(bytes32 preStateDigest) external onlyOwner {
+        PRE_STATE_DIGEST = preStateDigest;
+    }
+
     function getBountyPage(
         uint num,
         uint skip
