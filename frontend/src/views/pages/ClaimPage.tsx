@@ -299,7 +299,10 @@ export const ClaimPage = () => {
                 }}
                 error={errors.bountyId}
               />
-              <Collapse in={bountySection.isOpen && !!bounty} animateOpacity>
+              <Collapse
+                in={bountyId !== undefined && bountySection.isOpen && !!bounty}
+                animateOpacity
+              >
                 <HStack justify="space-between" spacing={4}>
                   <Text>{bounty?.title}</Text>
                   <Text>
