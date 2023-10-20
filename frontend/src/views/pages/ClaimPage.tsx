@@ -87,7 +87,6 @@ const SetupDetails = () => {
         description="Generate STARK proof from the attack vector and generate SNARK proof from the STARK proof. The SNARK proof is the one that will be submitted to the contract."
         steps={[
           "With correct attack vector in hand, we can generate a valid STARK proof.",
-          "Replace the `secret` variable `main.rs` in the `host` package with the `Secret` struct from the previous step.",
           "Create the `.env` file in the `host` package and add the content from the example `.env.example` file. Replace the file content with your desired values.",
           <Code w="full">
             BONSAI_API_URL=...
@@ -96,8 +95,19 @@ const SetupDetails = () => {
             <br />
             ADDRESS=...
           </Code>,
-          "Run the package with `cargo run --release`. The result in `stdout` will prints out all necessary information to claim the bounty.",
+          "Replace the `secret` variable `main.rs` in the `host` package with the `Secret` struct from the previous step.",
+          <Code w="full">
+            // Modify this line to change the secret
+            <br />
+            //let mut secret = totally_not_a_backdoor()?;
+          </Code>,
+          "Run the package with `cargo run --release`.",
           <Code w="full">cargo run --release</Code>,
+          "Or, skip the code modification part and provide transactions json and environment json as arguments.",
+          <Code w="full">
+            cargo run --release -- --txs-path txs.json --env-path env.json
+          </Code>,
+          "The result in `stdout` will prints out all necessary information to claim the bounty. Good luck!",
         ]}
       />
     </>
