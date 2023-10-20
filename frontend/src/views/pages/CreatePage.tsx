@@ -48,6 +48,7 @@ import { getChain, web3Modal } from "@/constants/web3";
 import { ADDRESS_REGEX, BYTES32_REGEX, IPFS_CID_REGEX } from "@/utils/string";
 import { formatAddress } from "@/utils/address";
 import { goerli } from "viem/chains";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 const SetupDetails = () => {
   return (
@@ -180,6 +181,8 @@ export const CreatePage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
+  const txToast = useTransactionToast();
+
   const chainId = useChainId();
   const chain = getChain(chainId);
   const client = usePublicClient();
@@ -241,10 +244,16 @@ export const CreatePage = () => {
         });
         const hash = await wallet?.writeContract(request);
         if (!hash) return;
+        txToast.submitted(hash);
         const tx = await client.waitForTransactionReceipt({
           hash,
         });
-        if (tx.status === "success") setIsApproved(true);
+        if (tx.status === "success") {
+          setIsApproved(true);
+          txToast.success(hash);
+        } else {
+          txToast.error(hash);
+        }
       } finally {
         setIsApproving(false);
       }
@@ -269,6 +278,7 @@ export const CreatePage = () => {
         });
         const hash = await wallet?.writeContract(request);
         if (!hash) return;
+        txToast.submitted(hash);
         const tx = await client.waitForTransactionReceipt({
           hash,
         });
@@ -280,10 +290,13 @@ export const CreatePage = () => {
             eventName: "NewBounty",
             ...tx.logs[tx.logs.length - 1],
           });
+          txToast.success(hash);
           setBountyId(Number(bountyID));
           onOpen();
           reset();
           setIsApproved(false);
+        } else {
+          txToast.error(hash);
         }
       } finally {
         setIsCreating(false);

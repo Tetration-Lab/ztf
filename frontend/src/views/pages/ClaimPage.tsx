@@ -38,6 +38,7 @@ import { useRouter } from "next/router";
 import { bountyFromContractData } from "@/interfaces/bounty";
 import { ZERO_ADDRESS, getDenom } from "@/constants/currency";
 import { ADDRESS_REGEX, BYTES32_REGEX, G16_SEAL_REGEX } from "@/utils/string";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 const SetupDetails = () => {
   return (
@@ -122,6 +123,9 @@ export const ClaimPage = () => {
     reset,
     watch,
   } = useForm<BountyClaimInfo>();
+
+  const txToast = useTransactionToast();
+
   const chainId = useChainId();
   const chain = getChain(chainId);
 
@@ -194,12 +198,16 @@ export const ClaimPage = () => {
       });
       const hash = await wallet?.writeContract(request);
       if (!hash) return;
+      txToast.submitted(hash);
       const tx = await client.waitForTransactionReceipt({
         hash,
       });
       if (tx.status === "success") {
         claimedModal.onOpen();
         reset();
+        txToast.success(hash);
+      } else {
+        txToast.error(hash);
       }
     } finally {
       setIsClaiming(false);

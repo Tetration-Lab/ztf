@@ -103,7 +103,6 @@ export const HomePage = () => {
             align={{ base: "start", md: "center" }}
           >
             <Stack>
-              <Heading>ZTF</Heading>
               <Text>
                 On-chain ctf with claimable bounty using zero-knowledge proof
               </Text>
