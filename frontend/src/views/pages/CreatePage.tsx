@@ -106,9 +106,17 @@ const SetupDetails = () => {
           </Code>,
           "Call the `hash` method to generate the environment hash. We need to submit this hash to the contract to let bounty's transaction to verify against.",
           <Code w="full">let hash = env.hash();</Code>,
-          "Export the environment to a JSON file. We recommend using `std::fs`.",
-          <Code w="full">std::fs::write("env.json", env.to_string());</Code>,
-          "Wrap that environment object with `environment` key, and optionally add `links` key to include the links to other documentation or source code.",
+          "Construct the `FullEnviroment` struct using the environment and additional links to other documentation, source code, or just a string note.",
+          <Code w="full">
+            let links = vec![EnvironmentLink::new_note(// fields in here //),
+            EnvironmentLink::new(// fields in here //)];
+            <br />
+            let full_env = FullEnvironment::new(env, links);
+          </Code>,
+          "Export the full environment to a JSON file. We recommend using `std::fs`.",
+          <Code w="full">
+            std::fs::write("env.json", full_env.to_string());
+          </Code>,
           "Final JSON file should look something like this,",
           <Code
             w="full"
@@ -119,6 +127,10 @@ const SetupDetails = () => {
             dangerouslySetInnerHTML={{
               __html: highlight(`{
   "links": [
+    {
+      "title": "...",
+      "description": "..."
+    },
     {
       "title": "...",
       "description": "...",

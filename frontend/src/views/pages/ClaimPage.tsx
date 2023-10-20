@@ -76,6 +76,8 @@ const SetupDetails = () => {
           <Code w="full">
             {`let result = transact(Secret { submitter: Address::from(...), txs, environment: env }).expect("Attacl vector failed");`}
           </Code>,
+          "The `result` variable will contains the `Receipt` struct that contains `txs_hash`, this is the hash of the transactions sequence that will be used to submit to the contract.",
+          <Code w="full">let txs_hash = result.txs_hash;</Code>,
         ]}
       />
       <InfoSection
@@ -204,6 +206,11 @@ export const ClaimPage = () => {
     }
   };
 
+  const { data: PRE_STATE_DIGEST } = useContractRead({
+    ...contract,
+    functionName: "PRE_STATE_DIGEST",
+  });
+
   return (
     <>
       <AppHeader title="Claim Bounty" />
@@ -218,7 +225,7 @@ export const ClaimPage = () => {
           <ModalBody>
             <Stack spacing={4}>
               <Text>
-                You've got ${bounty?.amount} ${getDenom(bounty?.currency)}!
+                You've got {bounty?.amount} {getDenom(bounty?.currency)}!
               </Text>
               <Button w="full" onClick={claimedModal.onClose}>
                 Back
@@ -243,7 +250,10 @@ export const ClaimPage = () => {
               {contract.address}
             </chakra.span>
           </Text>
-
+          <Text>
+            Please make sure that Pre-State Digest/Image ID is{" "}
+            <chakra.span as="b">{PRE_STATE_DIGEST}</chakra.span>
+          </Text>
           <SetupDetails />
           <HStack justify="space-between">
             <Heading fontSize="2xl">Claim Bounty</Heading>

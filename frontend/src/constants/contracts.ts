@@ -2,7 +2,7 @@ import { Address, parseAbi } from "viem";
 import { goerli } from "viem/chains";
 
 export const CONTRACTS: { [chainId: number]: Address } = {
-  [goerli.id]: "0x4cbed73a45ec4070b363b59958324532bac2f576",
+  [goerli.id]: "0xe52beb4e12122f9a34ae9aa14d5098c2aeec79c0",
 };
 
 export const getZTFContract = (chainId: number): Address => {
@@ -13,6 +13,7 @@ export const ZTF_ABI = parseAbi([
   "struct Asset { address asset; uint total; uint claimed; }",
   "struct Bounty { address flag; address owner; address callback; address asset; uint16 chainID; bool claimed; uint32 gasLimit; uint amount; uint lastUpdated; bytes32 envHash; string title; string ipfsHash; }",
   "struct ZClaim { address claimer; bytes32 txs_hash; bytes32 postStateDigest; bytes seal; }",
+  "function PRE_STATE_DIGEST() view returns (bytes32)",
   "function numBounty() view returns (uint256)",
   "function numClaimed() view returns (uint256)",
   "function getAssetStatPage(uint num, uint skip) view returns (Asset[] memory)",
