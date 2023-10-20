@@ -18,8 +18,8 @@ pub struct EnvironmentLink {
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct FullEnvironment {
-    links: Vec<EnvironmentLink>,
     enviroment: Environment,
+    links: Vec<EnvironmentLink>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -30,6 +30,35 @@ pub struct Environment {
     pub allowed_accounts: HashSet<Address>,
     pub accounts: HashMap<Address, Account>,
     pub storage: HashMap<Address, HashMap<U256, U256>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct EnvironmentBuilder(Environment);
+
+impl EnvironmentLink {
+    pub fn new(title: &str, description: &str, url: &str) -> Self {
+        Self {
+            title: title.to_string(),
+            description: Some(description.to_string()),
+            url: Some(url.to_string()),
+        }
+    }
+
+    pub fn new_note(title: &str, description: &str) -> Self {
+        Self {
+            title: title.to_string(),
+            description: Some(description.to_string()),
+            url: None,
+        }
+    }
+
+    pub fn new_link(title: &str, url: &str) -> Self {
+        Self {
+            title: title.to_string(),
+            description: None,
+            url: Some(url.to_string()),
+        }
+    }
 }
 
 impl FromStr for FullEnvironment {
@@ -47,8 +76,15 @@ impl Display for FullEnvironment {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct EnvironmentBuilder(Environment);
+impl FullEnvironment {
+    pub fn new(enviroment: Environment, links: Vec<EnvironmentLink>) -> Self {
+        Self { enviroment, links }
+    }
+
+    pub fn from_json(json: &str) -> Self {
+        serde_json::from_str(json).expect("Couldn't deserialize")
+    }
+}
 
 impl FromStr for Environment {
     type Err = serde_json::Error;
