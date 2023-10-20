@@ -16,6 +16,7 @@ export const InputField = ({
   error,
   customInput,
   sponsor,
+  inputSuffix,
 }: {
   title: string;
   description: string;
@@ -26,6 +27,7 @@ export const InputField = ({
     name: string;
     logo: string;
   };
+  inputSuffix?: React.ReactNode;
 }) => {
   return (
     <Stack spacing={1}>
@@ -44,7 +46,10 @@ export const InputField = ({
         </Stack>
 
         <Stack w="full">
-          {customInput ?? <Input {...inputProps} isInvalid={!!error} />}
+          <HStack>
+            {customInput ?? <Input {...inputProps} isInvalid={!!error} />}
+            {inputSuffix}
+          </HStack>
           {error && (
             <Text
               as="b"

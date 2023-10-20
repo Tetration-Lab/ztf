@@ -23,7 +23,7 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FaTrashCan } from "react-icons/fa6";
+import { FaTrashCan, FaUser } from "react-icons/fa6";
 import { Address, Hex } from "viem";
 import {
   useAccount,
@@ -131,7 +131,7 @@ export const ClaimPage = () => {
 
   const client = usePublicClient();
   const { data: wallet } = useWalletClient();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const contract = { address: getZTFContract(chainId), abi: ZTF_ABI };
 
   const {
@@ -312,6 +312,16 @@ export const ClaimPage = () => {
                   placeholder: "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
                 }}
                 error={errors.claimer}
+                inputSuffix={
+                  <Button
+                    px={{ base: 10, md: 6 }}
+                    leftIcon={<Icon as={FaUser} boxSize="12px" />}
+                    onClick={() => setValue("claimer", address!)}
+                    isDisabled={!address}
+                  >
+                    Your Address
+                  </Button>
+                }
               />
               <InputField
                 title="Transactions Sequence Hash"
