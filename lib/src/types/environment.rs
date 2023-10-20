@@ -11,15 +11,15 @@ use super::{Account, TargetCondition};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct EnvironmentLink {
-    title: String,
-    description: Option<String>,
-    url: Option<String>,
+    pub title: String,
+    pub description: Option<String>,
+    pub url: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct FullEnvironment {
-    enviroment: Environment,
-    links: Vec<EnvironmentLink>,
+    pub enviroment: Environment,
+    pub links: Vec<EnvironmentLink>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
