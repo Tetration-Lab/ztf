@@ -9,6 +9,19 @@ use crate::db::BlockConfig;
 
 use super::{Account, TargetCondition};
 
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct EnvironmentLink {
+    title: String,
+    description: Option<String>,
+    url: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct FullEnvironment {
+    links: Vec<EnvironmentLink>,
+    enviroment: Environment,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Environment {
     pub spec: SpecId,
@@ -18,6 +31,24 @@ pub struct Environment {
     pub accounts: HashMap<Address, Account>,
     pub storage: HashMap<Address, HashMap<U256, U256>>,
 }
+
+impl FromStr for FullEnvironment {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
+
+impl Display for FullEnvironment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&serde_json::to_string_pretty(self).expect("Should serialize"))?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct EnvironmentBuilder(Environment);
 
 impl FromStr for Environment {
     type Err = serde_json::Error;
@@ -84,9 +115,6 @@ impl Display for Environment {
         Ok(())
     }
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct EnvironmentBuilder(Environment);
 
 impl EnvironmentBuilder {
     pub fn new() -> Self {
