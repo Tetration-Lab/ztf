@@ -20,7 +20,7 @@ contract ZTFScript is Script {
         address[] memory assets = new address[](1);
         assets[0] = 0x5300000000000000000000000000000000000004;
         ZTF ztf = new ZTF(
-            0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
+            0xa9f5a60be55cc3faced59d2c54da23b3a7274ab2365bb4548a490e8caf6f2497,
             address(verifier),
             address(0), // no wormhole here
             assets // wETH

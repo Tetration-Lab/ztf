@@ -16,7 +16,7 @@ contract ZTFScript is Script {
         assets[0] = 0xD8134205b0328F5676aaeFb3B2a0DC15f4029d8C; // Spark's sDAI
         assets[1] = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352; // Spark's wstETH
         ZTF ztf = new ZTF(
-            0xd914d2c3b3e85e88d0ea677aec9b284bb82353011ad428f3c6d9f0ec50d7a673,
+            0xa9f5a60be55cc3faced59d2c54da23b3a7274ab2365bb4548a490e8caf6f2497,
             0xFe1e3A35D21afb7A51A62cA417027d2818207Ab2,
             0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a, // wormhole relayer
             assets
