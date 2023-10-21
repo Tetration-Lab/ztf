@@ -12,16 +12,11 @@ contract ZTFScript is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        RiscZeroGroth16Verifier verifier = new RiscZeroGroth16Verifier(
-            ControlID.CONTROL_ID_0,
-            ControlID.CONTROL_ID_1
-        );
-
         address[] memory assets = new address[](1);
         assets[0] = 0x5300000000000000000000000000000000000004;
         ZTF ztf = new ZTF(
             0xa9f5a60be55cc3faced59d2c54da23b3a7274ab2365bb4548a490e8caf6f2497,
-            address(verifier),
+            0x6Bf3eA9b54E97197775aE180dD5280412CBb18cb,
             address(0), // no wormhole here
             assets // wETH
         );
