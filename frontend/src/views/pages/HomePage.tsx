@@ -10,6 +10,7 @@ import {
   Image,
   Button,
   Skeleton,
+  Tooltip,
 } from "@chakra-ui/react";
 import { Section, Navbar, Footer, AppHeader } from "@/components/common";
 import { ValueCard } from "@/components/Card/ValueCard";
@@ -103,8 +104,13 @@ export const HomePage = () => {
             align={{ base: "start", md: "center" }}
           >
             <Stack>
+              <Heading>ZTF</Heading>
               <Text>
-                On-chain ctf with claimable bounty using zero-knowledge proof
+                Decentralized cross-chain bounty and crisis management protocol.
+              </Text>
+              <Text>
+                A.k.a. On-chain ctf with claimable bounty using zero-knowledge
+                proof.
               </Text>
               <Text as="i">
                 Made with love by{" "}
@@ -118,26 +124,40 @@ export const HomePage = () => {
               <Text fontSize="lg">Supported Chains</Text>
               <Wrap spacingX={2}>
                 {chains.map((c, i) => (
-                  <Button
-                    key={i}
-                    as={Button}
-                    gap={2}
-                    isLoading={isSwitching && pendingChainId === c.id}
-                    isActive={isConnected && chainId === c.id}
-                    cursor={chainId === c.id ? "default" : "pointer"}
-                    onClick={
-                      isSwitching || chainId === c.id
-                        ? undefined
-                        : async () => {
-                            if (!isConnected || !switchNetwork)
-                              web3Modal.open();
-                            else switchNetwork(c.id);
-                          }
-                    }
-                  >
-                    <Image key={i} src={c.image} boxSize="24px" />
-                    <Text as="b">{c.name}</Text>
-                  </Button>
+                  <Tooltip label={c.name}>
+                    <Button
+                      key={i}
+                      gap={2}
+                      boxSize={{ base: undefined, md: "48px" }}
+                      isLoading={isSwitching && pendingChainId === c.id}
+                      p={{ base: 2, md: 0 }}
+                      border={
+                        isConnected && chainId === c.id
+                          ? "1px solid gray"
+                          : "none"
+                      }
+                      cursor={chainId === c.id ? "default" : "pointer"}
+                      onClick={
+                        isSwitching || chainId === c.id
+                          ? undefined
+                          : async () => {
+                              if (!isConnected || !switchNetwork)
+                                web3Modal.open();
+                              else switchNetwork(c.id);
+                            }
+                      }
+                    >
+                      <Image
+                        key={i}
+                        src={c.image}
+                        boxSize="24px"
+                        fit="contain"
+                      />
+                      <Text as="b" display={{ base: "block", md: "none" }}>
+                        {c.name}
+                      </Text>
+                    </Button>
+                  </Tooltip>
                 ))}
               </Wrap>
             </Stack>

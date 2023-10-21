@@ -1,9 +1,9 @@
 import { Address, parseAbi } from "viem";
-import { goerli } from "viem/chains";
+import { chains } from "./web3";
 
-export const CONTRACTS: { [chainId: number]: Address } = {
-  [goerli.id]: "0xe52beb4e12122f9a34ae9aa14d5098c2aeec79c0",
-};
+export const CONTRACTS: { [chainId: number]: Address } = Object.fromEntries(
+  chains.map((c) => [c.id, c.ztf] as const)
+);
 
 export const getZTFContract = (chainId: number): Address => {
   return CONTRACTS[chainId] ?? "0x0";

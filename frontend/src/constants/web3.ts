@@ -1,11 +1,11 @@
-import { configureChains, createConfig } from "wagmi";
+import { Address, configureChains, createConfig } from "wagmi";
 import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { createWeb3Modal } from "@web3modal/wagmi";
 import { DESCRIPTION, TITLE } from "./texts";
 import theme from "@/themes";
 import { publicProvider } from "wagmi/providers/public";
-import { goerli } from "viem/chains";
+import { goerli, mantleTestnet, scrollSepolia } from "viem/chains";
 
 const metadata = {
   name: TITLE,
@@ -15,9 +15,30 @@ const metadata = {
 };
 
 export const chains = [
-  { ...goerli, image: "/images/chains/ethereum.png", wormholeEnabled: true },
-  //{ ...scrollSepolia, image: "/images/chains/scroll.png" },
-  //{ ...mantleTestnet, image: "/images/chains/mantle.svg" },
+  {
+    ...goerli,
+    image: "/images/chains/ethereum.png",
+    wormholeEnabled: true,
+    ztf: "0xe52beb4e12122f9a34ae9aa14d5098c2aeec79c0" as Address,
+  },
+  {
+    ...scrollSepolia,
+    blockExplorers: {
+      default: {
+        name: "Scrollscan",
+        url: "https://sepolia.scrollscan.dev",
+      },
+    },
+    image: "/images/chains/scroll.png",
+    wormholeEnabled: false,
+    ztf: "0x5f46b422e0192e409680a983ee14ef62f3b555df" as Address,
+  },
+  {
+    ...mantleTestnet,
+    image: "/images/chains/mantle.svg",
+    wormholeEnabled: false,
+    ztf: "0x5f46b422e0192e409680a983ee14ef62f3b555df" as Address,
+  },
 ];
 
 export const getChain = (chainId: number) => {
