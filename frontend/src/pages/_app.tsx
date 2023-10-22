@@ -8,6 +8,7 @@ import { wagmiConfig } from "@/constants/web3";
 import { WagmiConfig } from "wagmi";
 import { usePrices } from "@/stores/usePrices";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GoogleAnalytics } from "nextjs-google-analytics";
 
 // Font
 import "@fontsource/inconsolata/400.css";
@@ -39,6 +40,7 @@ const App = ({ Component, pageProps }: AppProps) => {
         <WagmiConfig config={wagmiConfig}>
           <ChakraProvider theme={theme}>
             <QueryClientProvider client={client}>
+              <GoogleAnalytics trackPageViews />
               <Component {...pageProps} />
             </QueryClientProvider>
           </ChakraProvider>
