@@ -4,14 +4,16 @@ use bonsai_sdk::alpha::Client;
 use clap::Parser;
 use dotenvy::dotenv;
 use ethers_core::types::Address;
+use hex::FromHex;
 use lib::{
     types::{Environment, FullEnvironment, Secret, TxSim},
     utils::snark::g16_seal_to_token_bytes,
 };
 use log::{debug, info};
-use methods::{ZTF_ELF, ZTF_ID};
+//use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
+    sha::Digest,
     Receipt,
 };
 
@@ -98,7 +100,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input_data = bytemuck::cast_slice(&to_vec(&secret)?).to_vec();
     let input_id = client.upload_input(input_data)?;
 
-    let session = client.create_session(img_id, input_id)?;
+    let session = client.create_session(img_id.clone(), input_id)?;
     debug!("Created session: {}", session.uuid);
     let receipt = loop {
         let res = session.status(&client)?;
@@ -120,7 +122,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 let receipt_buf = client.download(&receipt_url)?;
                 let receipt: Receipt = bincode::deserialize(&receipt_buf)?;
-                receipt.verify(ZTF_ID).expect("Receipt verification failed");
+                let img_id_digest = Digest::from_hex(img_id)?;
+                receipt
+                    .verify(img_id_digest)
+                    .expect("Receipt verification failed");
                 break receipt;
             }
             _ => {
