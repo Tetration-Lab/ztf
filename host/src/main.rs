@@ -12,7 +12,7 @@ use log::{debug, info};
 use methods::{ZTF_ELF, ZTF_ID};
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
-    MemoryImage, Program, Receipt, MEM_SIZE, PAGE_SIZE,
+    Receipt,
 };
 
 #[derive(Parser, Debug)]
@@ -49,12 +49,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::from_env()?;
 
     let img_id = {
-        let program = Program::load_elf(ZTF_ELF, MEM_SIZE as u32)?;
-        let image = MemoryImage::new(&program, PAGE_SIZE as u32)?;
-        let image_id = hex::encode(image.compute_id());
-        let image = bincode::serialize(&image)?;
-        client.upload_img(&image_id, image)?;
-        image_id
+        let image_id = env::var("IMAGE_ID")?;
+        let (prefix, _) = image_id
+            .as_str()
+            .char_indices()
+            .nth(2)
+            .expect("Invalid image id");
+        image_id[prefix..].to_string()
     };
     info!("Image id: 0x{}", img_id);
 
