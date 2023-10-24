@@ -177,7 +177,9 @@ export const BountyPage = () => {
           {detail.isLoading || !detail.data ? (
             <Skeleton my={2} h="lg" w="full" />
           ) : (
-            <EnvironmentCard environment={detail.data?.environment} />
+            <EnvironmentCard
+              environment={detail.data?.environment ?? detail.data?.enviroment}
+            />
           )}
         </Stack>
       </Section>

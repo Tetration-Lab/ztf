@@ -40,4 +40,5 @@ export const bountyFromContractData = (data: {
 export interface BountyDetail {
   links?: { title: string; description?: string; url?: string }[];
   environment?: object;
+  enviroment?: object;
 }

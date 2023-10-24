@@ -18,7 +18,7 @@ pub struct EnvironmentLink {
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct FullEnvironment {
-    pub enviroment: Environment,
+    pub environment: Environment,
     pub links: Vec<EnvironmentLink>,
 }
 
@@ -77,8 +77,8 @@ impl Display for FullEnvironment {
 }
 
 impl FullEnvironment {
-    pub fn new(enviroment: Environment, links: Vec<EnvironmentLink>) -> Self {
-        Self { enviroment, links }
+    pub fn new(environment: Environment, links: Vec<EnvironmentLink>) -> Self {
+        Self { environment, links }
     }
 
     pub fn from_json(json: &str) -> Self {

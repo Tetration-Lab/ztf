@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 (None, Some(p)) => {
                     debug!("Loading full env from: {}", p.display());
                     serde_json::from_str::<FullEnvironment>(&std::fs::read_to_string(p)?)?
-                        .enviroment
+                        .environment
                 }
                 _ => {
                     panic!("Missing env path, please provide either --env-path or --full-env-path")
