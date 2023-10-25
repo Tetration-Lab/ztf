@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Error};
+use anyhow::{bail, Error};
 use revm::{
     primitives::{
         Address, Bytecode, Bytes, CreateScheme, ExecutionResult, HashMap, Output, TransactTo,
@@ -14,7 +14,13 @@ pub fn get_initial_code_and_storage(
     sender: Address,
     code: Bytes,
     value: U256,
-) -> Result<(Bytecode, HashMap<U256, U256>), Error> {
+) -> Result<
+    (
+        Address,
+        HashMap<Address, (Option<Bytecode>, HashMap<U256, U256>)>,
+    ),
+    Error,
+> {
     let db = InMemoryDB::default();
     let mut evm = EVM::new();
     evm.database(db);
@@ -33,15 +39,14 @@ pub fn get_initial_code_and_storage(
         ..
     } = result
     {
-        let state = &evm
-            .db
-            .as_mut()
-            .expect("Should contains db")
-            .load_account(address)?;
-        let deployed_code = state.info.code.clone().ok_or(anyhow!("No code"))?;
-        let storage = state.storage.clone();
+        let state = &evm.db.as_mut().expect("Should contains db");
+        let storage = state
+            .accounts
+            .clone()
+            .into_iter()
+            .map(|(addr, db)| (addr, (db.info.code, db.storage)));
 
-        Ok((deployed_code, storage))
+        Ok((address, HashMap::from_iter(storage)))
     } else {
         bail!("Contract creation failed: {:#?}", result)
     }
@@ -70,7 +75,7 @@ mod tests {
             )
             .unwrap();
 
-        let (deployed_code, storage) = get_initial_code_and_storage(
+        let (addr, storage) = get_initial_code_and_storage(
             Address::from_hex("0x5B38Da6a701c568545dCfcB03FcB875f56beddC4").unwrap(),
             Bytes::from(code),
             U256::ZERO,
@@ -78,7 +83,8 @@ mod tests {
         .unwrap();
         let correct_bytecode = Bytes::from_hex("0x608060405234801561001057600080fd5b50600436106100415760003560e01c806306fdde03146100465780638da5cb5b146100645780638f1a01f114610082575b600080fd5b61004e6100a0565b60405161005b91906101f3565b60405180910390f35b61006c61012e565b6040516100799190610256565b60405180910390f35b61008a610152565b604051610097919061028c565b60405180910390f35b600180546100ad906102d6565b80601f01602080910402602001604051908101604052809291908181526020018280546100d9906102d6565b80156101265780601f106100fb57610100808354040283529160200191610126565b820191906000526020600020905b81548152906001019060200180831161010957829003601f168201915b505050505081565b7f0000000000000000000000005b38da6a701c568545dcfcb03fcb875f56beddc481565b60008054906101000a900460ff1681565b600081519050919050565b600082825260208201905092915050565b60005b8381101561019d578082015181840152602081019050610182565b60008484015250505050565b6000601f19601f8301169050919050565b60006101c582610163565b6101cf818561016e565b93506101df81856020860161017f565b6101e8816101a9565b840191505092915050565b6000602082019050818103600083015261020d81846101ba565b905092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600061024082610215565b9050919050565b61025081610235565b82525050565b600060208201905061026b6000830184610247565b92915050565b60008115159050919050565b61028681610271565b82525050565b60006020820190506102a1600083018461027d565b92915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b600060028204905060018216806102ee57607f821691505b602082108103610301576103006102a7565b5b5091905056fea26469706673582212209ed1fa09e5fdb46790b3c9abd2ce7968dd5074958298733364e214bbd178696e64736f6c63430008120033000000000000000000000000000000000000000000000000000000000000000000").unwrap();
         assert_eq!(
-            deployed_code.bytecode, correct_bytecode,
+            storage[&addr].0.clone().unwrap().bytecode,
+            correct_bytecode,
             "Incorrect deployed bytecode"
         );
         let correct_storage = HashMap::from_iter([
@@ -101,6 +107,6 @@ mod tests {
                 .unwrap(),
             ),
         ]);
-        assert_eq!(storage, correct_storage, "Incorrect storage");
+        assert_eq!(storage[&addr].1, correct_storage, "Incorrect storage");
     }
 }
