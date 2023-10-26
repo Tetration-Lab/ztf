@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 import "../CallbackBase.sol";
 
 contract CallbackTarget is CallbackBase {
-    bool public isSaved = false;
+    uint public numSaved = 0;
     event Saved();
 
     constructor(address[] memory trustList) {
@@ -13,7 +13,7 @@ contract CallbackTarget is CallbackBase {
     }
 
     function callback(address, address) external override onlyTrusted {
-        isSaved = true;
+        numSaved += 1;
         emit Saved();
     }
 }
