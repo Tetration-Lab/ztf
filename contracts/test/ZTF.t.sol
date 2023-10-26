@@ -5,10 +5,12 @@ import {Test, console2} from "forge-std/Test.sol";
 import {ZTF, ZClaim} from "../src/ZTF.sol";
 import {RiscZeroGroth16Verifier, ControlID} from "../src/groth16/RiscZeroGroth16Verifier.sol";
 import {TMP20} from "./TMP20.sol";
+import {CallbackTarget} from "../src/sample/CallbackTarget.sol";
 
 contract ZTFTest is Test {
     ZTF ztf;
     TMP20 token;
+    CallbackTarget target;
 
     function setUp() public {
         RiscZeroGroth16Verifier verifier = new RiscZeroGroth16Verifier(
@@ -25,6 +27,9 @@ contract ZTFTest is Test {
             address(0), // wormhole relayer
             assets
         );
+        address[] memory trustList = new address[](1);
+        trustList[0] = address(ztf);
+        target = new CallbackTarget(trustList);
     }
 
     function testBuildJournal() public view {
@@ -38,6 +43,33 @@ contract ZTFTest is Test {
                 0xa6fbeadc56071b4433e529e72afd0918e24547ba4cdc1dbd918fc193663c5935,
             "buildJournal failed"
         );
+    }
+
+    function testEnd2end() public {
+        token.approve(address(ztf), 100);
+        ztf.newBounty(
+            address(0),
+            address(target),
+            address(token),
+            10,
+            "hello",
+            "hello",
+            0x0df1f020d5b509230c97e83dd5ee529b2f1115e13c68de2a241262abd47c820f,
+            0,
+            0
+        );
+        require(token.balanceOf(address(ztf)) == 10, "bounty not deposited");
+        ztf.claim(
+            0,
+            ZClaim({
+                claimer: 0xF2F433bB4D87Ae3F7E5e5852692E29304C2d9511,
+                txs_hash: 0x0d52f7356537a0860d2992b78f804c813fc3573bcf45f136161862a64ff0f2e4,
+                postStateDigest: 0x948a4e564e5038414a83929b15e102d7af6f6a5d1b6f8dafb7b63ff21aa741e8,
+                seal: "\x03\xd4\xdb\xc3\x52\xa1\x64\x19\xda\x86\x7c\xf5\x12\xdb\x6b\x70\x02\x34\x65\xc7\xf5\x97\xb4\x9c\xd1\x44\xdf\x66\x5c\x80\x0d\x9f\x1f\x3f\x3b\x31\x86\x52\x34\xb9\x3f\x4c\x0f\x31\x2c\xe2\xb9\x03\x2a\x7e\xea\xb7\xd6\x4f\x20\x46\x19\x84\xb6\x6b\xdd\x28\x1c\x0d\x0e\x90\xef\xd4\x7c\x59\xc5\x36\x46\xf8\x33\x3f\x75\xec\x33\x03\x72\xff\x37\x2c\x9f\xfb\x37\xf9\x14\x37\xda\x29\x28\x6d\x02\xfa\x20\x75\x42\xbd\x6e\x3b\x59\x5b\xaa\xf9\xfe\xe1\x7c\x89\x25\xa8\xe5\x08\x88\xaa\xe3\x88\x96\x40\x08\x65\x1f\x28\xe0\xc6\x52\xda\x0b\x25\x76\x13\x1b\xa2\xf7\x69\xd5\x98\x4d\x3a\x8c\x98\xea\x71\xdb\xee\x41\x70\x3f\x5d\x5b\xcd\xbf\x42\xf4\x31\x9b\x03\x52\x46\x06\x8b\x63\xc8\x39\x09\xa9\x8e\xa9\x79\x5b\x61\x12\x9e\x30\xbb\x5a\x75\x2c\x0b\x5a\x32\xc8\xba\xca\x8b\x4b\x7d\xb7\x8f\x6e\xb0\x0d\xa6\x92\xc2\x0c\xe3\x57\x49\x9d\xc2\xc6\x06\xd9\xc4\x25\x9c\x9d\x44\xb8\xd4\x88\xc2\xac\x43\xb9\xfe\xf4\x1c\x8c\xbd\xa7\xab\x02\xd2\x40\x5f\x3b\x17\x86\xaf\x02\xd5\xd1\xc6\x76\x67\x39\x89\x28\x02\x9f\xd2\x91\x3c\xf1\x35\x52\x76\x04\x5f\x10\x88\x82\xbe"
+            })
+        );
+        require(target.numSaved() == 1, "callback not called");
+        require(token.balanceOf(address(ztf)) == 0, "bounty not deposited");
     }
 
     function testClaim() public {
