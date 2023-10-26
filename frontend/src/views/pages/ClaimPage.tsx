@@ -24,7 +24,7 @@ import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan, FaUser } from "react-icons/fa6";
-import { Address, Hex } from "viem";
+import { Address, BaseError, Hex } from "viem";
 import {
   useAccount,
   useChainId,
@@ -219,6 +219,9 @@ export const ClaimPage = () => {
       } else {
         txToast.error(hash);
       }
+    } catch (e) {
+      if (e instanceof BaseError) txToast.errorMessage(e.shortMessage);
+      throw e;
     } finally {
       setIsClaiming(false);
     }
@@ -311,6 +314,10 @@ export const ClaimPage = () => {
                       {bounty?.amount} {getDenom(bounty?.currency)}
                     </chakra.span>
                   </Text>
+                </HStack>
+                <HStack justify="space-between" spacing={4}>
+                  <Text>Env Hash</Text>
+                  <Text as="b">{bounty?.envHash}</Text>
                 </HStack>
               </Collapse>
               <InputField

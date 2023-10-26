@@ -1,6 +1,7 @@
 import { getChain } from "@/constants/web3";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Icon, Link, keyframes, useToast } from "@chakra-ui/react";
+import { ReactNode } from "react";
 import { FaSpinner } from "react-icons/fa6";
 import { Hex } from "viem";
 import { useChainId } from "wagmi";
@@ -58,9 +59,18 @@ export const useTransactionToast = () => {
     });
   };
 
+  const errorMessage = (message: ReactNode) => {
+    toast({
+      title: "Transaction Error",
+      status: "error",
+      description: message,
+    });
+  };
+
   return {
     submitted,
     success,
     error,
+    errorMessage,
   };
 };

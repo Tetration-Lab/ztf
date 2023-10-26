@@ -34,7 +34,14 @@ import _ from "lodash";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaTrashCan } from "react-icons/fa6";
-import { Address, Hex, decodeEventLog, formatUnits, parseUnits } from "viem";
+import {
+  Address,
+  BaseError,
+  Hex,
+  decodeEventLog,
+  formatUnits,
+  parseUnits,
+} from "viem";
 import {
   useAccount,
   useChainId,
@@ -254,6 +261,9 @@ export const CreatePage = () => {
         } else {
           txToast.error(hash);
         }
+      } catch (e) {
+        if (e instanceof BaseError) txToast.errorMessage(e.shortMessage);
+        throw e;
       } finally {
         setIsApproving(false);
       }
@@ -298,6 +308,9 @@ export const CreatePage = () => {
         } else {
           txToast.error(hash);
         }
+      } catch (e) {
+        if (e instanceof BaseError) txToast.errorMessage(e.shortMessage);
+        throw e;
       } finally {
         setIsCreating(false);
       }

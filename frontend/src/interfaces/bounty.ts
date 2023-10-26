@@ -1,5 +1,5 @@
 import { getDecimal } from "@/constants/currency";
-import { Address, formatUnits } from "viem";
+import { Address, Hex, formatUnits } from "viem";
 
 export interface Bounty {
   id: string;
@@ -10,10 +10,14 @@ export interface Bounty {
   ipfsHash: string;
   amount: number;
   currency: Address;
+  envHash: Hex;
+  callback: Address;
+  chainID: number;
+  flag: Address;
 }
 
 export const bountyFromContractData = (data: {
-  index: Number;
+  index: number;
   asset: `0x${string}`;
   flag: `0x${string}`;
   owner: `0x${string}`;
@@ -24,6 +28,7 @@ export const bountyFromContractData = (data: {
   envHash: `0x${string}`;
   title: string;
   ipfsHash: string;
+  chainID: number;
 }): Bounty => {
   return {
     id: data.index.toString(),
@@ -34,6 +39,10 @@ export const bountyFromContractData = (data: {
     ipfsHash: data.ipfsHash,
     amount: Number(formatUnits(data.amount, getDecimal(data.asset))),
     currency: data.asset,
+    envHash: data.envHash,
+    callback: data.callback,
+    chainID: data.chainID,
+    flag: data.flag,
   };
 };
 
